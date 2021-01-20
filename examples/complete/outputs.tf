@@ -1,14 +1,19 @@
-output "id" {
-  description = "ID of the created example"
-  value       = module.example.id
+output "instance_name" {
+  value       = module.tailscale.instance_name
+  description = "The name tag value of the Bastion instance."
 }
 
-output "example" {
-  description = "Output \"example\" from example module"
-  value       = module.example.example
+output "security_group_id" {
+  value       = module.tailscale.security_group_id
+  description = "The ID of the SSM Agent Security Group."
 }
 
-output "random" {
-  description = "Output \"random\" from example module"
-  value       = module.example.random
+output "launch_template_id" {
+  value       = module.tailscale.launch_template_id
+  description = "The ID of the SSM Agent Launch Template."
+}
+
+output "autoscaling_group_id" {
+  value       = module.tailscale.autoscaling_group_id
+  description = "The ID of the SSM Agent Autoscaling Group."
 }

@@ -1,14 +1,19 @@
-output "id" {
-  description = "ID of the created example"
-  value       = module.this.enabled ? module.this.id : null
+output "instance_name" {
+  value       = module.this.id
+  description = "The name tag value of the Bastion instance."
 }
 
-output "example" {
-  description = "Example output"
-  value       = module.this.enabled ? local.example : null
+output "security_group_id" {
+  value       = aws_security_group.default.id
+  description = "The ID of the SSM Agent Security Group."
 }
 
-output "random" {
-  description = "Stable random number for this example"
-  value       = module.this.enabled ? join("", random_integer.example[*].result) : null
+output "launch_template_id" {
+  value       = aws_launch_template.default.id
+  description = "The ID of the SSM Agent Launch Template."
+}
+
+output "autoscaling_group_id" {
+  value       = aws_autoscaling_group.default.id
+  description = "The ID of the SSM Agent Autoscaling Group."
 }

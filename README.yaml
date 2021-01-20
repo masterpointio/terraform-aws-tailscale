@@ -5,7 +5,7 @@
 #
 
 # Name of this project
-name: terraform-example-module
+name: terraform-aws-tailscale
 
 # Logo for this project
 #logo: docs/logo.png
@@ -20,13 +20,13 @@ copyrights:
     year: "2020"
 
 # Canonical GitHub repo
-github_repo: cloudposse/terraform-example-module
+github_repo: cloudposse/terraform-aws-tailscale
 
 # Badges to display
 badges:
   - name: "Latest Release"
-    image: "https://img.shields.io/github/release/cloudposse/terraform-example-module.svg"
-    url: "https://github.com/cloudposse/terraform-example-module/releases/latest"
+    image: "https://img.shields.io/github/release/cloudposse/terraform-aws-tailscale.svg"
+    url: "https://github.com/cloudposse/terraform-aws-tailscale/releases/latest"
   - name: "Slack Community"
     image: "https://slack.cloudposse.com/badge.svg"
     url: "https://slack.cloudposse.com"
@@ -57,7 +57,7 @@ references:
 
 # Short description of this project
 description: |-
-  This is `terraform-example-module` project provides all the scaffolding for a typical well-built Cloud Posse module. It's a template repository you can
+  This is `terraform-aws-tailscale` project provides all the scaffolding for a typical well-built Cloud Posse module. It's a template repository you can
   use when creating new repositories.
 
 # Introduction to the project
@@ -70,7 +70,7 @@ usage: |-
 
   ```hcl
   module "example" {
-    source = "https://github.com/cloudposse/terraform-example-module.git?ref=master"
+    source = "https://github.com/cloudposse/terraform-aws-tailscale.git?ref=master"
     example = "Hello world!"
   }
   ```
@@ -78,7 +78,7 @@ usage: |-
 # Example usage
 examples: |-
   Here is an example of using this module:
-  - [`examples/complete`](https://github.com/cloudposse/terraform-example-module/) - complete example of using this module
+  - [`examples/complete`](https://github.com/cloudposse/terraform-aws-tailscale/) - complete example of using this module
 
 # How to get started quickly
 #quickstart: |-
@@ -91,5 +91,7 @@ include:
 
 # Contributors to this project
 contributors:
+  - name: "Matt Gowie"
+    github: "Gowiem"
   - name: "Erik Osterman"
     github: "osterman"
