@@ -6,7 +6,7 @@ module "vpc" {
   source = "git::https://github.com/cloudposse/terraform-aws-vpc.git?ref=tags/0.17.0"
 
   cidr_block = "172.16.0.0/16"
-  attributes       = var.attributes
+  attributes = var.attributes
 
   context = module.this.context
 }
@@ -14,7 +14,7 @@ module "vpc" {
 module "subnets" {
   source = "git::https://github.com/cloudposse/terraform-aws-dynamic-subnets.git?ref=tags/0.32.0"
 
-  attributes       = var.attributes
+  attributes           = var.attributes
   availability_zones   = var.availability_zones
   vpc_id               = module.vpc.vpc_id
   igw_id               = module.vpc.igw_id
