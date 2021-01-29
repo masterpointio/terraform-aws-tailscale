@@ -11,7 +11,7 @@ module "instance_label" {
 
 locals {
   tailscale_tags = join(",", [
-    for t in values(module.this.tags) : "tag:${t}"
+    for t in values(module.this.tags) : replace("tag:${t}", "_", "-")
   ])
 }
 
