@@ -1,9 +1,10 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.3.0
+    rev: v4.4.0
     hooks:
       - id: check-yaml
-  - repo: git://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.45.0
+  - repo: https:///github.com/antonbabenko/pre-commit-terraform
+    rev: v1.77.0
     hooks:
       - id: terraform_fmt
+      - id: terraform_docs
