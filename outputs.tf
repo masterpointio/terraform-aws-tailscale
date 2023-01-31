@@ -1,19 +1,19 @@
 output "instance_name" {
   value       = module.this.id
-  description = "The name tag value of the Bastion instance."
+  description = "The name tag value of the Tailscale Subnet Router EC2 instance."
 }
 
 output "security_group_id" {
-  value       = aws_security_group.default.id
-  description = "The ID of the SSM Agent Security Group."
+  value       = module.tailscale_subnet_router.security_group_id
+  description = "The ID of the Tailscale Subnet Router EC2 instance Security Group."
 }
 
 output "launch_template_id" {
-  value       = aws_launch_template.default.id
-  description = "The ID of the SSM Agent Launch Template."
+  value       = module.tailscale_subnet_router.launch_template_id
+  description = "The ID of the Tailscale Subnet Router EC2 instance Launch Template."
 }
 
 output "autoscaling_group_id" {
-  value       = aws_autoscaling_group.default.id
-  description = "The ID of the SSM Agent Autoscaling Group."
+  value       = module.tailscale_subnet_router.autoscaling_group_id
+  description = "The ID of the Tailscale Subnet Router EC2 instance Autoscaling Group."
 }
