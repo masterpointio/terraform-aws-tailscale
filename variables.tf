@@ -78,7 +78,7 @@ variable "advertise_routes" {
 }
 
 variable "expiry" {
-  default     = 3600
+  default     = 7776000
   type        = number
   description = "The expiry of the auth key in seconds."
 }
