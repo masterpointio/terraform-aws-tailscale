@@ -1,6 +1,6 @@
 [![Masterpoint Logo](https://i.imgur.com/RDLnuQO.png)](https://masterpoint.io)
 
-# terraform-aws-tailscale [![Latest Release](https://img.shields.io/github/release/masterpointio/terraform-aws-tailscale.svg)](https://github.com/masterpoint/terraform-aws-tailscale/releases/latest)
+# terraform-aws-tailscale [![Latest Release](https://img.shields.io/github/release/masterpointio/terraform-aws-tailscale.svg)](https://github.com/masterpointio/terraform-aws-tailscale/releases/latest)
 
 [![README Header][readme_header_img]][readme_header_link]
 
