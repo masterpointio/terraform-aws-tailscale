@@ -12,7 +12,8 @@ data "template_file" "userdata" {
 }
 
 module "tailscale_subnet_router" {
-  source = "git::https://github.com/masterpointio/terraform-aws-ssm-agent.git?ref=tags/0.15.1"
+  source  = "masterpointio/ssm-agent/aws"
+  version = "0.16.1"
 
   context = module.this.context
   tags    = module.this.tags

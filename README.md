@@ -11,12 +11,17 @@ It's 100% Open Source and licensed under the [APACHE2](LICENSE).
 
 ## Usage
 
-
 Here's how to invoke this example module in your projects
 
 ```hcl
 module "example" {
-  source = "git::https://github.com/masterpointio/terraform-aws-tailscale.git?ref=tags/X.X.X"
+  source  = "masterpointio/ssm-agent/aws"
+  version = "0.16.1"
+
+  vpc_id           = var.vpc_id
+  advertise_routes = [var.vpc_cidr_block]
+  subnet_ids       = var.private_subnet_ids
+  key_pair_name    = var.tailscale_existing_ssh_key_name
 }
 ```
 
@@ -30,24 +35,24 @@ Here is an example of using this module:
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.12.26 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 3.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0 |
 | <a name="requirement_local"></a> [local](#requirement\_local) | >= 1.2 |
 | <a name="requirement_null"></a> [null](#requirement\_null) | >= 2.0 |
-| <a name="requirement_tailscale"></a> [tailscale](#requirement\_tailscale) | >= 0.13.6 |
+| <a name="requirement_tailscale"></a> [tailscale](#requirement\_tailscale) | >= 0.13.7 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_tailscale"></a> [tailscale](#provider\_tailscale) | >= 0.13.6 |
+| <a name="provider_tailscale"></a> [tailscale](#provider\_tailscale) | >= 0.13.7 |
 | <a name="provider_template"></a> [template](#provider\_template) | n/a |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_tailscale_subnet_router"></a> [tailscale\_subnet\_router](#module\_tailscale\_subnet\_router) | git::https://github.com/masterpointio/terraform-aws-ssm-agent.git | tags/0.15.1 |
+| <a name="module_tailscale_subnet_router"></a> [tailscale\_subnet\_router](#module\_tailscale\_subnet\_router) | masterpointio/ssm-agent/aws | 0.16.1 |
 | <a name="module_this"></a> [this](#module\_this) | cloudposse/label/null | 0.25.0 |
 
 ## Resources
