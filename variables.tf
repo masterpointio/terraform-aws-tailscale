@@ -21,20 +21,31 @@ variable "create_run_shell_document" {
 variable "session_logging_enabled" {
   default     = true
   type        = bool
-  description = "To enable CloudWatch and S3 session logging or not. Note this does not apply to SSH sessions as AWS cannot log those sessions."
+  description = <<EOF
+  To enable CloudWatch and S3 session logging or not.
+  Note this does not apply to SSH sessions as AWS cannot log those sessions.
+  EOF
 }
 
 variable "session_logging_kms_key_alias" {
   default     = "alias/session_logging"
   type        = string
-  description = "Alias name for `session_logging` KMS Key. This is only applied if 2 conditions are met: (1) `session_logging_kms_key_arn` is unset, (2) `session_logging_encryption_enabled` = true."
+  description = <<EOF
+  Alias name for `session_logging` KMS Key.
+  This is only applied if 2 conditions are met: (1) `session_logging_kms_key_arn` is unset,
+  (2) `session_logging_encryption_enabled` = true.
+  EOF
 }
 
 
 variable "session_logging_ssm_document_name" {
   default     = "SSM-SessionManagerRunShell-Tailscale"
   type        = string
-  description = "Name for `session_logging` SSM document. This is only applied if 2 conditions are met: (1) `session_logging_enabled` = true, (2) `create_run_shell_document` = true."
+  description = <<EOF
+  Name for `session_logging` SSM document.
+  This is only applied if 2 conditions are met: (1) `session_logging_enabled` = true,
+  (2) `create_run_shell_document` = true.
+  EOF
 }
 
 variable "key_pair_name" {
@@ -46,13 +57,21 @@ variable "key_pair_name" {
 variable "user_data" {
   default     = ""
   type        = string
-  description = "The user_data to use for the Tailscale Subnet Router EC2 instance. You can use this to automate installation of all the required command line tools."
+  description = <<EOF
+  The user_data to use for the Tailscale Subnet Router EC2 instance.
+  You can use this to automate installation of all the required command line tools.
+  EOF
 }
 
 variable "ami" {
   default     = ""
   type        = string
-  description = "The AMI to use for the  Tailscale Subnet Router EC2 instance. If not provided, the latest Amazon Linux 2 AMI will be used. Note: This will update periodically as AWS releases updates to their AL2 AMI. Pin to a specific AMI if you would like to avoid these updates."
+  description = <<EOF
+  The AMI to use for the Tailscale Subnet Router EC2 instance.
+  If not provided, the latest Amazon Linux 2 AMI will be used.
+  Note: This will update periodically as AWS releases updates to their AL2 AMI.
+  Pin to a specific AMI if you would like to avoid these updates.
+  EOF
 }
 
 variable "instance_type" {
@@ -64,7 +83,7 @@ variable "instance_type" {
 variable "instance_count" {
   default     = 1
   type        = number
-  description = "The number of  Tailscale Subnet Router EC2 instances you would like to deploy."
+  description = "The number of Tailscale Subnet Router EC2 instances you would like to deploy."
 }
 
 ################
@@ -74,7 +93,14 @@ variable "instance_count" {
 variable "advertise_routes" {
   default     = []
   type        = list(string)
-  description = "The routes (expressed as CIDRs) to advertise as part of the Tailscale Subnet Router. e.g. [ '10.0.2.0/24', '10.0.1.0/24 ]"
+  description = <<EOF
+  The routes (expressed as CIDRs) to advertise as part of the Tailscale Subnet Router.
+  Example: ["10.0.2.0/24", "0.0.1.0/24"]
+  EOF
+  validation {
+    condition     = can([for route in var.advertise_routes : cidrsubnet(route, 0, 0)])
+    error_message = "All elements in the list must be valid CIDR blocks."
+  }
 }
 
 variable "expiry" {
@@ -82,7 +108,6 @@ variable "expiry" {
   type        = number
   description = "The expiry of the auth key in seconds."
 }
-
 
 variable "preauthorized" {
   default     = true
