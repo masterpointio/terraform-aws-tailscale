@@ -32,7 +32,7 @@ Here is an example of using this module:
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0 |
 | <a name="requirement_local"></a> [local](#requirement\_local) | >= 1.2 |
 | <a name="requirement_null"></a> [null](#requirement\_null) | >= 2.0 |
@@ -92,6 +92,7 @@ Here is an example of using this module:
 | <a name="input_stage"></a> [stage](#input\_stage) | ID element. Usually used to indicate role, e.g. 'prod', 'staging', 'source', 'build', 'test', 'deploy', 'release' | `string` | `null` | no |
 | <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | The Subnet IDs which the Tailscale Subnet Router EC2 instance will run in. These *should* be private subnets. | `list(string)` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Additional tags (e.g. `{'BusinessUnit': 'XYZ'}`).<br>Neither the tag keys nor the tag values will be modified by this module. | `map(string)` | `{}` | no |
+| <a name="input_tailnet_name"></a> [tailnet\_name](#input\_tailnet\_name) | This unique name of the Tailnet that is used when registering DNS entries, e.g. 'cat-crocodile.ts.net'.<br>  See https://tailscale.com/kb/1217/tailnet-name/ for more information. | `string` | `"sphinx-dinosaur.ts.net"` | no |
 | <a name="input_tenant"></a> [tenant](#input\_tenant) | ID element \_(Rarely used, not included by default)\_. A customer identifier, indicating who this instance of a resource is for | `string` | `null` | no |
 | <a name="input_user_data"></a> [user\_data](#input\_user\_data) | The user\_data to use for the Tailscale Subnet Router EC2 instance.<br>  You can use this to automate installation of all the required command line tools. | `string` | `""` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | The ID of the VPC which the Tailscale Subnet Router EC2 instance will run in. | `string` | n/a | yes |
