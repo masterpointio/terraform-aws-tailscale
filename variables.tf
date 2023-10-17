@@ -12,6 +12,12 @@ variable "subnet_ids" {
   description = "The Subnet IDs which the Tailscale Subnet Router EC2 instance will run in. These *should* be private subnets."
 }
 
+variable "additional_security_group_ids" {
+  default     = []
+  type        = list(string)
+  description = "Additional Security Group IDs to associate with the Tailscale Subnet Router EC2 instance."
+}
+
 variable "create_run_shell_document" {
   default     = true
   type        = bool

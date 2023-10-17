@@ -14,9 +14,10 @@ module "tailscale_subnet_router" {
   context = module.this.context
   tags    = module.this.tags
 
-  vpc_id                    = var.vpc_id
-  subnet_ids                = var.subnet_ids
-  key_pair_name             = var.key_pair_name
+  vpc_id                        = var.vpc_id
+  subnet_ids                    = var.subnet_ids
+  key_pair_name                 = var.key_pair_name
+  additional_security_group_ids = var.additional_security_group_ids
   create_run_shell_document = var.create_run_shell_document
 
   session_logging_kms_key_alias     = var.session_logging_kms_key_alias
