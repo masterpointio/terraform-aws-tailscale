@@ -1,20 +1,38 @@
-variable "region" {
-  type        = string
-  description = "The AWS Region to deploy these resources to."
-}
-
 variable "availability_zones" {
   type        = list(string)
   description = "List of Availability Zones where subnets will be created"
 }
 
-variable "advertise_routes" {
-  default     = []
-  type        = list(string)
-  description = "The routes (expressed as CIDRs) to advertise as part of this tailscale relay instance. e.g. [ '10.0.2.0/24', '10.0.1.0/24 ]"
+variable "oauth_client_id" {
+  type        = string
+  description = <<-EOF
+  The OAuth application's ID when using OAuth client credentials.
+  Can be set via the TAILSCALE_OAUTH_CLIENT_ID environment variable.
+  Both 'oauth_client_id' and 'oauth_client_secret' must be set.
+  Conflicts with 'api_key'.
+  EOF
 }
 
-variable "authkey" {
+variable "oauth_client_secret" {
   type        = string
-  description = "The pre-auth key retrieved from the tailscale console which allows to authenticate a new device without an interactive login."
+  description = <<-EOF
+  (Sensitive) The OAuth application's secret when using OAuth client credentials.
+  Can be set via the TAILSCALE_OAUTH_CLIENT_SECRET environment variable.
+  Both 'oauth_client_id' and 'oauth_client_secret' must be set.
+  Conflicts with 'api_key'.
+  EOF
+}
+
+variable "region" {
+  type        = string
+  description = "The AWS Region to deploy these resources to."
+}
+
+variable "tailnet" {
+  type        = string
+  description = <<-EOF
+  The organization name of the Tailnet in which to perform actions.
+  Can be set via the TAILSCALE_TAILNET environment variable.
+  Default is the tailnet that owns API credentials passed to the provider.
+  EOF
 }
