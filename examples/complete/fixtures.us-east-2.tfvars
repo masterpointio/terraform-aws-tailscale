@@ -1,15 +1,14 @@
 enabled = true
 
-region = "us-east-2"
-
-availability_zones = ["us-east-2a"]
-
 namespace = "eg"
+stage     = "test"
+name      = "tailscale"
 
-stage = "test"
+region                  = "us-east-1"
+availability_zones      = ["us-east-1a", "us-east-1b"]
+ipv4_primary_cidr_block = "172.16.0.0/16"
 
-name = "tailscale"
-
-advertise_routes = ["172.16.0.0/24", "172.16.1.0/24"]
-
-authkey = "fakefakefakefake"
+# Replace these values with your own
+tailnet             = "orgname.org.github"
+oauth_client_id     = "OAUTH_CLIENT_ID"
+oauth_client_secret = "OAUTH_CLIENT_SECRET"

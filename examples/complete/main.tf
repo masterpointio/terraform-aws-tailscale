@@ -2,13 +2,15 @@ provider "aws" {
   region = var.region
 }
 
+provider "tailscale" {
+  tailnet             = var.tailnet
+  oauth_client_id     = var.oauth_client_id
+  oauth_client_secret = var.oauth_client_secret
+}
+
 module "vpc" {
   source  = "cloudposse/vpc/aws"
-  version = "2.1.0"
-
-  namespace = var.namespace
-  stage     = var.stage
-  name      = var.name
+  version = "2.1.1"
 
   ipv4_primary_cidr_block = "172.16.0.0/16"
 
@@ -17,16 +19,13 @@ module "vpc" {
 
 module "subnets" {
   source  = "cloudposse/dynamic-subnets/aws"
-  version = "2.3.0"
-
-  namespace = var.namespace
-  stage     = var.stage
+  version = "2.4.1"
 
   availability_zones = var.availability_zones
-  vpc_id             = module.vpc.vpc_id
-  igw_id             = [module.vpc.igw_id]
-  ipv4_cidr_block    = [module.vpc.vpc_cidr_block]
-  ipv6_enabled       = var.ipv6_enabled
+
+  vpc_id          = module.vpc.vpc_id
+  igw_id          = [module.vpc.igw_id]
+  ipv4_cidr_block = [module.vpc.vpc_cidr_block]
 
   context = module.this.context
 }
@@ -34,11 +33,9 @@ module "subnets" {
 module "tailscale" {
   source = "../.."
 
-  attributes       = var.attributes
   vpc_id           = module.vpc.vpc_id
-  subnet_ids       = module.subnets.public_subnet_ids
-  advertise_routes = var.advertise_routes
-  authkey          = var.authkey
+  subnet_ids       = module.subnets.private_subnet_ids
+  advertise_routes = [module.vpc.vpc_cidr_block]
 
   context = module.this.context
 }
