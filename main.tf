@@ -9,7 +9,7 @@ locals {
 
 module "tailscale_subnet_router" {
   source  = "masterpointio/ssm-agent/aws"
-  version = "0.16.1"
+  version = "0.17.0"
 
   context = module.this.context
   tags    = module.this.tags
@@ -27,6 +27,9 @@ module "tailscale_subnet_router" {
   ami            = var.ami
   instance_type  = var.instance_type
   instance_count = var.instance_count
+
+  monitoring_enabled = var.monitoring_enabled
+  associate_public_ip_address = var.associate_public_ip_address
 
   user_data = base64encode(length(var.user_data) > 0 ? var.user_data : local.userdata)
 }
