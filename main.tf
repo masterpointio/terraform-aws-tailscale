@@ -28,7 +28,7 @@ module "tailscale_subnet_router" {
   instance_type  = var.instance_type
   instance_count = var.instance_count
 
-  monitoring_enabled = var.monitoring_enabled
+  monitoring_enabled          = var.monitoring_enabled
   associate_public_ip_address = var.associate_public_ip_address
 
   user_data = base64encode(length(var.user_data) > 0 ? var.user_data : local.userdata)

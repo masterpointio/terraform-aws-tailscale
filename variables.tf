@@ -94,14 +94,14 @@ variable "instance_count" {
 
 variable "monitoring_enabled" {
   description = "Enable detailed monitoring of instances"
-  type = bool
-  default = true
+  type        = bool
+  default     = true
 }
 
 variable "associate_public_ip_address" {
   description = "Associate public IP address with subnet router"
-  type = bool
-  default = null
+  type        = bool
+  default     = null
 }
 
 ################
