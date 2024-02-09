@@ -92,6 +92,18 @@ variable "instance_count" {
   description = "The number of Tailscale Subnet Router EC2 instances you would like to deploy."
 }
 
+variable "monitoring_enabled" {
+  description = "Enable detailed monitoring of instances"
+  type        = bool
+  default     = true
+}
+
+variable "associate_public_ip_address" {
+  description = "Associate public IP address with subnet router"
+  type        = bool
+  default     = null
+}
+
 ################
 ## Tailscale ##
 ##############
