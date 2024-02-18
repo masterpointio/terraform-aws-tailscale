@@ -1,3 +1,4 @@
+# trunk-ignore-all(trivy/AVD-AWS-0178): We don't need have VPC Flow logs.
 provider "aws" {
   region = var.region
 }

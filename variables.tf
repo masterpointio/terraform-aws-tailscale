@@ -86,12 +86,6 @@ variable "instance_type" {
   description = "The instance type to use for the Tailscale Subnet Router EC2 instance."
 }
 
-variable "instance_count" {
-  default     = 1
-  type        = number
-  description = "The number of Tailscale Subnet Router EC2 instances you would like to deploy."
-}
-
 variable "monitoring_enabled" {
   description = "Enable detailed monitoring of instances"
   type        = bool
@@ -107,6 +101,18 @@ variable "associate_public_ip_address" {
 ################
 ## Tailscale ##
 ##############
+
+variable "machine_tags" {
+  default     = []
+  type        = list(string)
+  description = "The Tailscale tags to apply to the Tailscale Subnet Router machine in addition to the full hostname tag."
+}
+
+variable "ssh_enabled" {
+  type        = bool
+  default     = true
+  description = "Enable SSH access to the Tailscale Subnet Router EC2 instance. Defaults to true."
+}
 
 variable "advertise_routes" {
   default     = []
