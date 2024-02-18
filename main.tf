@@ -1,8 +1,8 @@
 locals {
 
-  name_tag              = "tag:${module.this.id}"
+  primary_tag           = coalesce(var.primary_tag, "tag:${module.this.id}")
   prefixed_machine_tags = [for tag in var.machine_tags : "tag:${tag}"]
-  tailscale_tags        = concat(local.prefixed_machine_tags, [local.name_tag])
+  tailscale_tags        = concat([local.primary_tag], local.prefixed_machine_tags)
 
   userdata = templatefile("${path.module}/userdata.sh.tmpl", {
     routes      = join(",", var.advertise_routes)
