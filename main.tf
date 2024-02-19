@@ -1,14 +1,15 @@
 locals {
 
-  primary_tag           = coalesce(var.primary_tag, "tag:${module.this.id}")
-  prefixed_machine_tags = [for tag in var.machine_tags : "tag:${tag}"]
-  tailscale_tags        = concat([local.primary_tag], local.prefixed_machine_tags)
+  primary_tag              = coalesce(var.primary_tag, module.this.id)
+  prefixed_primary_tag     = "tag:${local.primary_tag}"
+  prefixed_additional_tags = [for tag in var.additional_tags : "tag:${tag}"]
+  tailscale_tags           = concat([local.prefixed_primary_tag], local.prefixed_additional_tags)
 
   userdata = templatefile("${path.module}/userdata.sh.tmpl", {
     routes      = join(",", var.advertise_routes)
     authkey     = tailscale_tailnet_key.default.key
     hostname    = module.this.id
-    tags        = join(",", local.prefixed_machine_tags)
+    tags        = join(",", local.tailscale_tags)
     ssh_enabled = var.ssh_enabled
   })
 }

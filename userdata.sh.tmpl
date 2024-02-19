@@ -18,6 +18,8 @@ sudo systemctl enable --now tailscaled
 sleep 5
 
 # Start tailscale
+# We pass --advertise-tags below even though the authkey being created with those tags should result
+# in the same effect. This is to be more explicit because tailscale tags are a complicated topic.
 sudo tailscale up \
   --advertise-routes=${routes} \
   --advertise-tags=${tags} \

@@ -105,13 +105,13 @@ variable "associate_public_ip_address" {
 variable "primary_tag" {
   default     = null
   type        = string
-  description = "The primary tag to apply to the Tailscale Subnet Router machine. This must match the OAuth client's tag. If not provided, the module will use the module's ID as the primary tag, which is configured in context.tf"
+  description = "The primary tag to apply to the Tailscale Subnet Router machine. Do not include the `tag:` prefix. This must match the OAuth client's tag. If not provided, the module will use the module's ID as the primary tag, which is configured in context.tf"
 }
 
-variable "machine_tags" {
+variable "additional_tags" {
   default     = []
   type        = list(string)
-  description = "Additional Tailscale tags to apply to the Tailscale Subnet Router machine in addition to `primary_tag`."
+  description = "Additional Tailscale tags to apply to the Tailscale Subnet Router machine in addition to `primary_tag`. These should not include the `tag:` prefix."
 }
 
 variable "ssh_enabled" {
