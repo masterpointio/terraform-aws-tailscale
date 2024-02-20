@@ -1,5 +1,5 @@
 #!/bin/bash -ex
-exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+exec > >(tee /var/log/user-data.log | logger -t user-data -s 2>/dev/console) 2>&1
 
 # Enable ip_forward to allow advertising routes
 echo 'net.ipv4.ip_forward = 1' | sudo tee -a /etc/sysctl.conf
@@ -18,7 +18,10 @@ sudo systemctl enable --now tailscaled
 sleep 5
 
 # Start tailscale
+# We pass --advertise-tags below even though the authkey being created with those tags should result
+# in the same effect. This is to be more explicit because tailscale tags are a complicated topic.
 sudo tailscale up \
-    --advertise-routes=${routes} \
-    --authkey=${authkey} \
-    --hostname=${hostname}
+  --advertise-routes=${routes} \
+  --advertise-tags=${tags} \
+  --authkey=${authkey} \
+  --hostname=${hostname}%{ if ssh_enabled == true } --ssh%{ endif }
