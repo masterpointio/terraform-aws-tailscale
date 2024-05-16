@@ -77,7 +77,7 @@ Here is an example of using this module:
 
 | Name                                                                                                     | Source                      | Version |
 | -------------------------------------------------------------------------------------------------------- | --------------------------- | ------- |
-| <a name="module_tailscale_subnet_router"></a> [tailscale_subnet_router](#module_tailscale_subnet_router) | masterpointio/ssm-agent/aws | 1.0.0   |
+| <a name="module_tailscale_subnet_router"></a> [tailscale_subnet_router](#module_tailscale_subnet_router) | masterpointio/ssm-agent/aws | 1.1.0   |
 | <a name="module_this"></a> [this](#module_this)                                                          | cloudposse/label/null       | 0.25.0  |
 
 ## Resources
