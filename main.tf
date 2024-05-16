@@ -16,7 +16,7 @@ locals {
 
 module "tailscale_subnet_router" {
   source  = "masterpointio/ssm-agent/aws"
-  version = "1.0.0"
+  version = "1.1.0"
 
   context = module.this.context
   tags    = module.this.tags
