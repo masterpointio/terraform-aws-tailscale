@@ -21,5 +21,5 @@ jobs:
         uses: trunk-io/trunk-action/upgrade@v1
         with:
           base: main
-          reviewers: "@masterpointio/Masterpoint Internal"
+          reviewers: "@masterpointio/masterpoint-internal"
           prefix: "chore: "
