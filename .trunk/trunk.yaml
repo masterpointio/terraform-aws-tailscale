@@ -16,7 +16,7 @@ runtimes:
 lint:
   enabled:
     - actionlint@1.7.1
-    - checkov@3.2.217
+    - checkov@3.2.219
     - git-diff-check
     - markdownlint@0.41.0
     - prettier@3.3.3
@@ -25,7 +25,7 @@ lint:
     - terrascan@1.19.1
     - tflint@0.52.0
     - trivy@0.54.1
-    - trufflehog@3.80.5
+    - trufflehog@3.81.7
     - yamllint@1.35.1
   ignore:
     - linters: [shellcheck]
