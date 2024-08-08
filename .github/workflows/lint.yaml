@@ -21,13 +21,6 @@ jobs:
       - name: Trunk Check
         uses: trunk-io/trunk-action@v1
 
-  tf-fmt:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Terraform CLI
-        uses: hashicorp/setup-terraform@v3
-      - run: terraform fmt -check -recursive
-
   conventional-title:
     runs-on: ubuntu-latest
     steps:
