@@ -24,4 +24,4 @@ sudo tailscale up \
   --advertise-routes=${routes} \
   --advertise-tags=${tags} \
   --authkey=${authkey} \
-  --hostname=${hostname}%{ if ssh_enabled == true } --ssh%{ endif }
+  --hostname=${hostname}%{ if ssh_enabled == true } --ssh%{ endif }%{ if exit_node == true } --advertise-exit-node%{ endif }

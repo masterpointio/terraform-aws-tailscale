@@ -11,6 +11,7 @@ locals {
     hostname    = module.this.id
     tags        = join(",", local.tailscale_tags)
     ssh_enabled = var.ssh_enabled
+    exit_node   = var.exit_node
   })
 }
 
