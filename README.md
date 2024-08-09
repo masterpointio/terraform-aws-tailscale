@@ -103,7 +103,7 @@ Here is an example of using this module:
 | <a name="input_enabled"></a> [enabled](#input\_enabled) | Set to false to prevent the module from creating any resources | `bool` | `null` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | ID element. Usually used for region e.g. 'uw2', 'us-west-2', OR role 'prod', 'staging', 'dev', 'UAT' | `string` | `null` | no |
 | <a name="input_ephemeral"></a> [ephemeral](#input\_ephemeral) | Indicates if the key is ephemeral. | `bool` | `false` | no |
-| <a name="input_exit_node"></a> [exit\_node](#input\_exit\_node) | Advertise Tailscale Subnet Router EC2 instance as exit node. Defaults to false. | `bool` | `false` | no |
+| <a name="input_exit_node_enabled"></a> [exit\_node\_enabled](#input\_exit\_node\_enabled) | Advertise Tailscale Subnet Router EC2 instance as exit node. Defaults to false. | `bool` | `false` | no |
 | <a name="input_expiry"></a> [expiry](#input\_expiry) | The expiry of the auth key in seconds. | `number` | `7776000` | no |
 | <a name="input_id_length_limit"></a> [id\_length\_limit](#input\_id\_length\_limit) | Limit `id` to this many characters (minimum 6).<br>Set to `0` for unlimited length.<br>Set to `null` for keep the existing setting, which defaults to `0`.<br>Does not affect `id_full`. | `number` | `null` | no |
 | <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type) | The instance type to use for the Tailscale Subnet Router EC2 instance. | `string` | `"t3.nano"` | no |

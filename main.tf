@@ -6,12 +6,12 @@ locals {
   tailscale_tags           = concat([local.prefixed_primary_tag], local.prefixed_additional_tags)
 
   userdata = templatefile("${path.module}/userdata.sh.tmpl", {
-    routes      = join(",", var.advertise_routes)
-    authkey     = tailscale_tailnet_key.default.key
-    hostname    = module.this.id
-    tags        = join(",", local.tailscale_tags)
-    ssh_enabled = var.ssh_enabled
-    exit_node   = var.exit_node
+    routes            = join(",", var.advertise_routes)
+    authkey           = tailscale_tailnet_key.default.key
+    hostname          = module.this.id
+    tags              = join(",", local.tailscale_tags)
+    ssh_enabled       = var.ssh_enabled
+    exit_node_enabled = var.exit_node_enabled
   })
 }
 

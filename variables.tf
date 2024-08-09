@@ -120,7 +120,7 @@ variable "ssh_enabled" {
   description = "Enable SSH access to the Tailscale Subnet Router EC2 instance. Defaults to true."
 }
 
-variable "exit_node" {
+variable "exit_node_enabled" {
   type        = bool
   default     = false
   description = "Advertise Tailscale Subnet Router EC2 instance as exit node. Defaults to false."
