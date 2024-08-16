@@ -3,18 +3,30 @@ locals {
   primary_tag              = coalesce(var.primary_tag, module.this.id)
   prefixed_primary_tag     = "tag:${local.primary_tag}"
   prefixed_additional_tags = [for tag in var.additional_tags : "tag:${tag}"]
-  tailscale_tags           = concat([local.prefixed_primary_tag], local.prefixed_additional_tags)
+
+  tailscale_tags = concat([local.prefixed_primary_tag], local.prefixed_additional_tags)
+
+  tailscaled_extra_flags_enabled   = length(var.tailscaled_extra_flags) > 0
+  tailscale_up_extra_flags_enabled = length(var.tailscale_up_extra_flags) > 0
 
   userdata = templatefile("${path.module}/userdata.sh.tmpl", {
-    routes            = join(",", var.advertise_routes)
     authkey           = tailscale_tailnet_key.default.key
-    hostname          = module.this.id
-    tags              = join(",", local.tailscale_tags)
-    ssh_enabled       = var.ssh_enabled
     exit_node_enabled = var.exit_node_enabled
+    hostname          = module.this.id
+    routes            = join(",", var.advertise_routes)
+    ssh_enabled       = var.ssh_enabled
+    tags              = join(",", local.tailscale_tags)
+
+    tailscaled_extra_flags_enabled   = local.tailscaled_extra_flags_enabled
+    tailscaled_extra_flags           = join(" ", var.tailscaled_extra_flags)
+    tailscale_up_extra_flags_enabled = local.tailscale_up_extra_flags_enabled
+    tailscale_up_extra_flags         = join(" ", var.tailscale_up_extra_flags)
   })
 }
 
+# Note: `trunk` ignores that this rule is already listed in `.trivyignore` file.
+# Bucket does not have versioning enabled
+# trivy:ignore:AVD-AWS-0090
 module "tailscale_subnet_router" {
   source  = "masterpointio/ssm-agent/aws"
   version = "1.2.0"
