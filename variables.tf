@@ -160,5 +160,23 @@ variable "ephemeral" {
 variable "reusable" {
   default     = true
   type        = bool
-  description = " Indicates if the key is reusable or single-use."
+  description = "Indicates if the key is reusable or single-use."
+}
+
+variable "tailscaled_extra_flags" {
+  default     = []
+  type        = list(string)
+  description = <<-EOT
+  Extra flags to pass to Tailscale daemon for advanced configuration. Example: ["--state=mem:"]
+  See more in the [docs](https://tailscale.com/kb/1278/tailscaled#flags-to-tailscaled).
+  EOT
+}
+
+variable "tailscale_up_extra_flags" {
+  default     = []
+  type        = list(string)
+  description = <<-EOT
+  Extra flags to pass to `tailscale up` for advanced configuration.
+  See more in the [docs](https://tailscale.com/kb/1241/tailscale-up).
+  EOT
 }
