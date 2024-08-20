@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/v1.3.0...v1.4.0) (2024-08-20)
+
+
+### Features
+
+* support extra arguments ([#28](https://github.com/masterpointio/terraform-aws-tailscale/issues/28)) ([6ff5059](https://github.com/masterpointio/terraform-aws-tailscale/commit/6ff5059a5c4a1efa0b3c81b6f92a42ee5f165e3d))
+
 ## [1.3.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/1.2.0...v1.3.0) (2024-08-13)
 
 
