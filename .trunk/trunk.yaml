@@ -6,7 +6,7 @@ cli:
 plugins:
   sources:
     - id: trunk
-      ref: v1.6.1
+      ref: v1.6.2
       uri: https://github.com/trunk-io/plugins
 runtimes:
   enabled:
@@ -18,14 +18,14 @@ lint:
     - tofu@1.8.1
     - terraform@1.1.0
     - actionlint@1.7.1
-    - checkov@3.2.228
+    - checkov@3.2.235
     - git-diff-check
     - markdownlint@0.41.0
     - prettier@3.3.3
     - shellcheck@0.10.0
     - shfmt@3.6.0
     - terrascan@1.19.1
-    - tflint@0.52.0
+    - tflint@0.53.0
     - trivy@0.54.1
     - trufflehog@3.81.9
     - yamllint@1.35.1
