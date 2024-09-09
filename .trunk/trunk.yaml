@@ -2,7 +2,7 @@
 # To learn more about the format of this file, see https://docs.trunk.io/reference/trunk-yaml
 version: 0.1
 cli:
-  version: 1.22.4
+  version: 1.22.5
 plugins:
   sources:
     - id: trunk
@@ -15,10 +15,10 @@ runtimes:
     - python@3.10.8
 lint:
   enabled:
-    - tofu@1.8.1
+    - tofu@1.8.2
     - terraform@1.1.0
     - actionlint@1.7.1
-    - checkov@3.2.239
+    - checkov@3.2.246
     - git-diff-check
     - markdownlint@0.41.0
     - prettier@3.3.3
@@ -26,7 +26,7 @@ lint:
     - shfmt@3.6.0
     - terrascan@1.19.1
     - tflint@0.53.0
-    - trivy@0.54.1
+    - trivy@0.55.0
     - trufflehog@3.81.10
     - yamllint@1.35.1
   ignore:
