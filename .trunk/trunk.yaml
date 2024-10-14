@@ -18,7 +18,7 @@ lint:
     - tofu@1.8.3
     - terraform@1.1.0
     - actionlint@1.7.3
-    - checkov@3.2.256
+    - checkov@3.2.257
     - git-diff-check
     - markdownlint@0.42.0
     - prettier@3.3.3
@@ -26,8 +26,8 @@ lint:
     - shfmt@3.6.0
     - terrascan@1.19.1
     - tflint@0.53.0
-    - trivy@0.55.2
-    - trufflehog@3.82.6
+    - trivy@0.56.2
+    - trufflehog@3.82.8
     - yamllint@1.35.1
   ignore:
     - linters: [shellcheck]
