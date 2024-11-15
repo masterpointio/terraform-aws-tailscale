@@ -71,9 +71,9 @@ Here is an example of using this module:
 
 ## Providers
 
-| Name                                                               | Version |
-| ------------------------------------------------------------------ | ------- |
-| <a name="provider_tailscale"></a> [tailscale](#provider_tailscale) | 0.17.2  |
+| Name                                                               | Version   |
+| ------------------------------------------------------------------ | --------- |
+| <a name="provider_tailscale"></a> [tailscale](#provider_tailscale) | >= 0.13.7 |
 
 ## Modules
 
