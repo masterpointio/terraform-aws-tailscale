@@ -34,7 +34,7 @@ locals {
 # trivy:ignore:AVD-AWS-0090
 module "tailscale_subnet_router" {
   source  = "masterpointio/ssm-agent/aws"
-  version = "1.2.0" #TODO: Update version when this is merged https://github.com/masterpointio/terraform-aws-ssm-agent/pull/29
+  version = "1.2.0"
 
   context = module.this.context
   tags    = module.this.tags
