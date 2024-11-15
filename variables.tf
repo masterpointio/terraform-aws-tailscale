@@ -180,3 +180,12 @@ variable "tailscale_up_extra_flags" {
   See more in the [docs](https://tailscale.com/kb/1241/tailscale-up).
   EOT
 }
+
+variable "ssm_state_enabled" {
+  default     = false
+  type        = bool
+  description = <<-EOT
+  Control is tailscaled state (including preferences and keys) is stored in AWS SSM.
+  See more in the [docs](https://tailscale.com/kb/1278/tailscaled#flags-to-tailscaled).
+  EOT
+}
