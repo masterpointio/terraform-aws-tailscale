@@ -43,7 +43,6 @@ variable "session_logging_kms_key_alias" {
   EOF
 }
 
-
 variable "session_logging_ssm_document_name" {
   default     = "SSM-SessionManagerRunShell-Tailscale"
   type        = string
@@ -96,6 +95,24 @@ variable "associate_public_ip_address" {
   description = "Associate public IP address with subnet router"
   type        = bool
   default     = null
+}
+
+variable "max_size" {
+  description = "Maximum number of instances in the Auto Scaling Group. Must be >= desired_capacity."
+  type        = number
+  default     = 2
+}
+
+variable "min_size" {
+  description = "Minimum number of instances in the Auto Scaling Group"
+  type        = number
+  default     = 1
+}
+
+variable "desired_capacity" {
+  description = "Desired number of instances in the Auto Scaling Group"
+  type        = number
+  default     = 1
 }
 
 ################

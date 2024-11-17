@@ -50,8 +50,11 @@ module "tailscale_subnet_router" {
   session_logging_enabled           = var.session_logging_enabled
   session_logging_ssm_document_name = var.session_logging_ssm_document_name
 
-  ami           = var.ami
-  instance_type = var.instance_type
+  ami              = var.ami
+  instance_type    = var.instance_type
+  max_size         = var.max_size
+  min_size         = var.min_size
+  desired_capacity = var.desired_capacity
 
   monitoring_enabled          = var.monitoring_enabled
   associate_public_ip_address = var.associate_public_ip_address
