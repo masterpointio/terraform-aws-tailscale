@@ -71,23 +71,26 @@ Here is an example of using this module:
 
 ## Providers
 
-| Name                                                               | Version   |
-| ------------------------------------------------------------------ | --------- |
-| <a name="provider_tailscale"></a> [tailscale](#provider_tailscale) | >= 0.13.7 |
+| Name                                                               | Version |
+| ------------------------------------------------------------------ | ------- |
+| <a name="provider_aws"></a> [aws](#provider_aws)                   | 5.76.0  |
+| <a name="provider_tailscale"></a> [tailscale](#provider_tailscale) | 0.17.2  |
 
 ## Modules
 
 | Name                                                                                                     | Source                             | Version |
 | -------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------- |
+| <a name="module_ssm_policy"></a> [ssm_policy](#module_ssm_policy)                                        | cloudposse/iam-policy/aws          | 2.0.1   |
 | <a name="module_ssm_state"></a> [ssm_state](#module_ssm_state)                                           | cloudposse/ssm-parameter-store/aws | 0.13.0  |
 | <a name="module_tailscale_subnet_router"></a> [tailscale_subnet_router](#module_tailscale_subnet_router) | masterpointio/ssm-agent/aws        | 1.2.0   |
 | <a name="module_this"></a> [this](#module_this)                                                          | cloudposse/label/null              | 0.25.0  |
 
 ## Resources
 
-| Name                                                                                                                           | Type     |
-| ------------------------------------------------------------------------------------------------------------------------------ | -------- |
-| [tailscale_tailnet_key.default](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/tailnet_key) | resource |
+| Name                                                                                                                                             | Type     |
+| ------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| [aws_iam_role_policy_attachment.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [tailscale_tailnet_key.default](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/tailnet_key)                   | resource |
 
 ## Inputs
 

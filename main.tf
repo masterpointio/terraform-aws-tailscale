@@ -90,3 +90,34 @@ module "ssm_state" {
   context = module.this.context
   tags    = module.this.tags
 }
+
+module "ssm_policy" {
+  count   = var.ssm_state_enabled ? 1 : 0
+  source  = "cloudposse/iam-policy/aws"
+  version = "2.0.1"
+
+  name        = "ssm"
+  description = "Additional SSM access for SSM Agent"
+
+  iam_policy_enabled = true
+  iam_policy = [{
+    statements = [
+      {
+        sid     = "SSMAgentPutParameter"
+        effect  = "Allow"
+        actions = ["ssm:PutParameter"]
+        resources = [
+          module.ssm_state[0].arn_map[local.ssm_state_param_name],
+        ]
+      },
+    ]
+  }]
+  context = module.this.context
+  tags    = module.this.tags
+}
+
+resource "aws_iam_role_policy_attachment" "default" {
+  count      = var.ssm_state_enabled ? 1 : 0
+  role       = module.tailscale_subnet_router.role_id
+  policy_arn = module.ssm_policy[0].policy_arn
+}
