@@ -4,23 +4,28 @@ exec > >(tee /var/log/user-data.log | logger -t user-data -s 2>/dev/console) 2>&
 echo "Starting user-data script..."
 
 echo "Enabling IP forwarding..."
-echo 'net.ipv4.ip_forward = 1' | sudo tee -a /etc/sysctl.conf
-echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.conf
-sudo sysctl -p /etc/sysctl.conf
+echo 'net.ipv4.ip_forward = 1' >> /etc/sysctl.conf
+echo 'net.ipv6.conf.all.forwarding = 1' >> /etc/sysctl.conf
+sysctl -p /etc/sysctl.conf
+
+echo "Waiting for the RPM lock to be released..."
+while fuser /var/lib/rpm/.rpm.lock >/dev/null 2>&1 ; do
+    sleep 1
+done
 
 echo "Installing Tailscale..."
-sudo yum install -y yum-utils
-sudo yum-config-manager --add-repo https://pkgs.tailscale.com/stable/amazon-linux/2/tailscale.repo
-sudo yum install -y tailscale
+dnf install -y dnf-utils
+dnf config-manager --add-repo https://pkgs.tailscale.com/stable/amazon-linux/2/tailscale.repo
+dnf install -y tailscale
 
 %{ if tailscaled_extra_flags_enabled == true }
 echo "Exporting FLAGS to /etc/default/tailscaled..."
-sudo sed -i "s|^FLAGS=.*|FLAGS=\"${tailscaled_extra_flags}\"|" /etc/default/tailscaled
+sed -i "s|^FLAGS=.*|FLAGS=\"${tailscaled_extra_flags}\"|" /etc/default/tailscaled
 %{ endif }
 
-# Setup tailscale
+# Setup Tailscale
 echo "Enabling and starting tailscaled service..."
-sudo systemctl enable --now tailscaled
+systemctl enable --now tailscaled
 
 echo "Waiting for tailscaled to initialize..."
 sleep 5
@@ -28,7 +33,7 @@ sleep 5
 # Start tailscale
 # We pass --advertise-tags below even though the authkey being created with those tags should result
 # in the same effect. This is to be more explicit because tailscale tags are a complicated topic.
-sudo tailscale up \
+tailscale up \
   %{ if ssh_enabled == true }--ssh%{ endif } \
   %{ if exit_node_enabled == true }--advertise-exit-node%{ endif } \
   %{ if tailscale_up_extra_flags_enabled == true }${tailscale_up_extra_flags}%{ endif } \
