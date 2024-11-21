@@ -7,9 +7,6 @@
 .terraform
 .terraform.tfstate.lock.info
 
-**/.idea
-**/*.iml
-
 # Cloud Posse Build Harness https://github.com/cloudposse/build-harness
 **/.build-harness
 **/build-harness
@@ -17,3 +14,8 @@
 # Crash log files
 crash.log
 test.log
+
+# Random
+**/.idea
+**/*.iml
+.DS_Store

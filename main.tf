@@ -4,9 +4,14 @@ locals {
   prefixed_primary_tag     = "tag:${local.primary_tag}"
   prefixed_additional_tags = [for tag in var.additional_tags : "tag:${tag}"]
 
+  ssm_state_param_name = var.ssm_state_enabled ? "/tailscale/${module.this.id}/state" : null
+  ssm_state_flag       = var.ssm_state_enabled ? "--state=${module.ssm_state[0].arn_map[local.ssm_state_param_name]}" : ""
+
   tailscale_tags = concat([local.prefixed_primary_tag], local.prefixed_additional_tags)
 
-  tailscaled_extra_flags_enabled   = length(var.tailscaled_extra_flags) > 0
+  tailscaled_extra_flags         = join(" ", compact(concat(var.tailscaled_extra_flags, [local.ssm_state_flag])))
+  tailscaled_extra_flags_enabled = length(local.tailscaled_extra_flags) > 0
+
   tailscale_up_extra_flags_enabled = length(var.tailscale_up_extra_flags) > 0
 
   userdata = templatefile("${path.module}/userdata.sh.tmpl", {
@@ -18,7 +23,7 @@ locals {
     tags              = join(",", local.tailscale_tags)
 
     tailscaled_extra_flags_enabled   = local.tailscaled_extra_flags_enabled
-    tailscaled_extra_flags           = join(" ", var.tailscaled_extra_flags)
+    tailscaled_extra_flags           = local.tailscaled_extra_flags
     tailscale_up_extra_flags_enabled = local.tailscale_up_extra_flags_enabled
     tailscale_up_extra_flags         = join(" ", var.tailscale_up_extra_flags)
   })
@@ -45,8 +50,11 @@ module "tailscale_subnet_router" {
   session_logging_enabled           = var.session_logging_enabled
   session_logging_ssm_document_name = var.session_logging_ssm_document_name
 
-  ami           = var.ami
-  instance_type = var.instance_type
+  ami              = var.ami
+  instance_type    = var.instance_type
+  max_size         = var.max_size
+  min_size         = var.min_size
+  desired_capacity = var.desired_capacity
 
   monitoring_enabled          = var.monitoring_enabled
   associate_public_ip_address = var.associate_public_ip_address
@@ -62,4 +70,54 @@ resource "tailscale_tailnet_key" "default" {
 
   # A device is automatically tagged when it is authenticated with this key.
   tags = local.tailscale_tags
+}
+
+module "ssm_state" {
+  count                = var.ssm_state_enabled ? 1 : 0
+  source               = "cloudposse/ssm-parameter-store/aws"
+  version              = "0.13.0"
+  ignore_value_changes = true
+
+  parameter_write = [
+    {
+      name        = local.ssm_state_param_name
+      type        = "SecureString"
+      overwrite   = "true"
+      value       = "{}"
+      description = "Tailscaled state of ${module.this.id} subnet router."
+    }
+  ]
+  context = module.this.context
+  tags    = module.this.tags
+}
+
+module "ssm_policy" {
+  count   = var.ssm_state_enabled ? 1 : 0
+  source  = "cloudposse/iam-policy/aws"
+  version = "2.0.1"
+
+  name        = "ssm"
+  description = "Additional SSM access for SSM Agent"
+
+  iam_policy_enabled = true
+  iam_policy = [{
+    statements = [
+      {
+        sid     = "SSMAgentPutParameter"
+        effect  = "Allow"
+        actions = ["ssm:PutParameter"]
+        resources = [
+          module.ssm_state[0].arn_map[local.ssm_state_param_name],
+        ]
+      },
+    ]
+  }]
+  context = module.this.context
+  tags    = module.this.tags
+}
+
+resource "aws_iam_role_policy_attachment" "default" {
+  count      = var.ssm_state_enabled ? 1 : 0
+  role       = module.tailscale_subnet_router.role_id
+  policy_arn = module.ssm_policy[0].policy_arn
 }

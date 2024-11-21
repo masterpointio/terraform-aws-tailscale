@@ -1,8 +1,8 @@
-name: Weekly Trunk Upgrade
+name: Monthly Trunk Upgrade
 on:
   schedule:
-    # Every Monday @ 5am
-    - cron: 0 5 * * 1
+    # On the first day of every month @ 8am
+    - cron: 0 8 1 * *
     # Allows us to manually run the workflow from Actions UI
   workflow_dispatch: {}
 permissions: read-all
@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Trunk Upgrade
-        uses: trunk-io/trunk-action/upgrade@d5b1b61d0beee562512f530a278b6a2931fba857
+        uses: trunk-io/trunk-action/upgrade@2eaee169140ec559bd556208f9f99cdfdf468da8 # v1.1.18
         with:
           base: main
           reviewers: "@masterpointio/masterpoint-internal"

@@ -14,8 +14,8 @@ sudo yum-config-manager --add-repo https://pkgs.tailscale.com/stable/amazon-linu
 sudo yum install -y tailscale
 
 %{ if tailscaled_extra_flags_enabled == true }
-echo "Exporting FLAGS to environment variable..."
-export FLAGS=${tailscaled_extra_flags}%
+echo "Exporting FLAGS to /etc/default/tailscaled..."
+sudo sed -i "s|^FLAGS=.*|FLAGS=\"${tailscaled_extra_flags}\"|" /etc/default/tailscaled
 %{ endif }
 
 # Setup tailscale

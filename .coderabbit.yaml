@@ -1,0 +1,90 @@
+# Docs: https://docs.coderabbit.ai/configure-coderabbit
+# Schema: https://coderabbit.ai/integrations/schema.v2.json
+# Support: https://discord.gg/GsXnASn26c
+
+language: en
+
+tone_instructions: |
+  Provide feedback in a professional, friendly, constructive, and concise tone.
+  Offer clear, specific suggestions and best practices to help enhance the code quality and promote learning.
+
+early_access: true
+
+knowledge_base:
+  # The scope of learnings to use for the knowledge base.
+  # `local` uses the repository's learnings,
+  # `global` uses the organization's learnings,
+  # `auto` uses repository's learnings for public repositories and organization's learnings for private repositories.
+  # Default value: `auto`
+  learnings:
+    scope: global
+  issues:
+    scope: global
+  pull_requests:
+    scope: global
+
+reviews:
+  profile: chill
+  auto_review:
+    # Ignore reviewing if the title of the pull request contains any of these keywords (case-insensitive)
+    ignore_title_keywords:
+      - wip
+      - draft
+      - test
+  # Set the commit status to 'pending' when the review is in progress and 'success' when it is complete.
+  commit_status: false
+  # Post review details on each review. Additionally, post a review status when a review is skipped in certain cases.
+  review_status: false
+  path_instructions:
+    - path: "**/*.tf"
+      instructions: |
+        You're a Terraform expert who has thoroughly studied all the documentation from Hashicorp https://developer.hashicorp.com/terraform/docs and OpenTofu https://opentofu.org/docs/.
+        You have a strong grasp of Terraform syntax and prioritize providing accurate and insightful code suggestions.
+        As a fan of the Cloud Posse / SweetOps ecosystem, you incorporate many of their best practices https://docs.cloudposse.com/best-practices/terraform/ while balancing them with general Terraform guidelines.
+  tools:
+    # By default, all tools are enabled.
+    # Masterpoint uses Trunk (https://trunk.io) so we do not need a lot of this feedback due to overlap.
+    shellcheck:
+      enabled: false
+    ruff:
+      enabled: false
+    markdownlint:
+      enabled: false
+    github-checks:
+      enabled: false
+    languagetool:
+      enabled: false
+    biome:
+      enabled: false
+    hadolint:
+      enabled: false
+    swiftlint:
+      enabled: false
+    phpstan:
+      enabled: false
+    golangci-lint:
+      enabled: false
+    yamllint:
+      enabled: false
+    gitleaks:
+      enabled: false
+    checkov:
+      enabled: false
+    detekt:
+      enabled: false
+    eslint:
+      enabled: false
+    rubocop:
+      enabled: false
+    buf:
+      enabled: false
+    regal:
+      enabled: false
+    actionlint:
+      enabled: false
+    pmd:
+      enabled: false
+    cppcheck:
+      enabled: false
+    circleci:
+      enabled: false
