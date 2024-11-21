@@ -9,7 +9,14 @@ echo 'net.ipv6.conf.all.forwarding = 1' >> /etc/sysctl.conf
 sysctl -p /etc/sysctl.conf
 
 echo "Waiting for the RPM lock to be released..."
+TIMEOUT=30
+start_time=$(date +%s)
 while fuser /var/lib/rpm/.rpm.lock >/dev/null 2>&1 ; do
+    current_time=$(date +%s)
+    if (( current_time - start_time > TIMEOUT )); then
+        echo "Timeout waiting for RPM lock to be released"
+        exit 1
+    fi
     sleep 1
 done
 
