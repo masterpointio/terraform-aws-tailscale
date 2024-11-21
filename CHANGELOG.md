@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/v1.4.0...v1.5.0) (2024-11-21)
+
+
+### Features
+
+* support AWS SSM tailscaled state ([#41](https://github.com/masterpointio/terraform-aws-tailscale/issues/41)) ([4e9ef78](https://github.com/masterpointio/terraform-aws-tailscale/commit/4e9ef782a5e2f6460c9150e78972bb7e8560dd52))
+
 ## [1.4.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/v1.3.0...v1.4.0) (2024-08-20)
 
 
