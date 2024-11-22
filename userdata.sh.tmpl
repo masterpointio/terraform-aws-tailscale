@@ -8,22 +8,38 @@ echo 'net.ipv4.ip_forward = 1' >> /etc/sysctl.conf
 echo 'net.ipv6.conf.all.forwarding = 1' >> /etc/sysctl.conf
 sysctl -p /etc/sysctl.conf
 
-echo "Waiting for the RPM lock to be released..."
-TIMEOUT=30
-start_time=$(date +%s)
-while fuser /var/lib/rpm/.rpm.lock >/dev/null 2>&1 ; do
-    current_time=$(date +%s)
-    if (( current_time - start_time > TIMEOUT )); then
-        echo "Timeout waiting for RPM lock to be released"
-        exit 1
+# Function to retry a command up to a maximum number of attempts
+retry_command() {
+  local cmd="$1"
+  local max_attempts="$2"
+  local attempt=1
+  local exit_code=0
+
+  while [ $attempt -le $max_attempts ]; do
+    echo "Attempt $attempt of $max_attempts: $cmd"
+    eval "$cmd"
+    exit_code=$?
+    if [ $exit_code -eq 0 ]; then
+      echo "Command succeeded: $cmd"
+      return 0
+    else
+      echo "Command failed with exit code $exit_code: $cmd"
+      attempt=$((attempt + 1))
+      if [ $attempt -le $max_attempts ]; then
+        echo "Retrying in 2 seconds..."
+        sleep 2
+      fi
     fi
-    sleep 1
-done
+  done
+
+  echo "Command failed after $max_attempts attempts: $cmd"
+  return $exit_code
+}
 
 echo "Installing Tailscale..."
-dnf install -y dnf-utils
-dnf config-manager --add-repo https://pkgs.tailscale.com/stable/amazon-linux/2/tailscale.repo
-dnf install -y tailscale
+retry_command "dnf install -y dnf-utils" 5
+retry_command "dnf config-manager --add-repo https://pkgs.tailscale.com/stable/amazon-linux/2/tailscale.repo" 5
+retry_command "dnf install -y tailscale" 5
 
 %{ if tailscaled_extra_flags_enabled == true }
 echo "Exporting FLAGS to /etc/default/tailscaled..."
