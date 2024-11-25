@@ -202,7 +202,9 @@ variable "ssm_state_enabled" {
   default     = false
   type        = bool
   description = <<-EOT
-  Control if tailscaled state is stored in AWS SSM (including preferences and keys). This tells the Tailscale daemon to write + read state from SSM, which unlocks important features like retaining the existing tailscale machine name.  
+  Control if tailscaled state is stored in AWS SSM (including preferences and keys).
+  This tells the Tailscale daemon to write + read state from SSM,
+  which unlocks important features like retaining the existing tailscale machine name.
   See more in the [docs](https://tailscale.com/kb/1278/tailscaled#flags-to-tailscaled).
   EOT
 }
