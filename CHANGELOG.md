@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/masterpointio/terraform-aws-tailscale/compare/v1.5.0...v1.5.1) (2024-11-25)
+
+
+### Bug Fixes
+
+* avoid RPM lock issue ([#44](https://github.com/masterpointio/terraform-aws-tailscale/issues/44)) ([30b0aca](https://github.com/masterpointio/terraform-aws-tailscale/commit/30b0acaba65aa95bee257cb46b76ddc7d8071a1b))
+
 ## [1.5.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/v1.4.0...v1.5.0) (2024-11-21)
 
 
