@@ -15,19 +15,19 @@ runtimes:
     - python@3.10.8
 lint:
   enabled:
-    - tofu@1.8.5
+    - tofu@1.8.6
     - terraform@1.1.0
     - actionlint@1.7.4
-    - checkov@3.2.296
+    - checkov@3.2.322
     - git-diff-check
-    - markdownlint@0.42.0
-    - prettier@3.3.3
+    - markdownlint@0.43.0
+    - prettier@3.4.1
     - shellcheck@0.10.0
     - shfmt@3.6.0
     - terrascan@1.19.1
     - tflint@0.54.0
     - trivy@0.56.2
-    - trufflehog@3.83.6
+    - trufflehog@3.84.1
     - yamllint@1.35.1
   ignore:
     - linters: [shellcheck]
