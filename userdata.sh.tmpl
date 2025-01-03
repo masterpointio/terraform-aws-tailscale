@@ -54,6 +54,37 @@ retry_command() {
   return $exit_code
 }
 
+# Install CloudWatch Agent
+echo "Installing CloudWatch Agent..."
+retry_command "dnf install -y amazon-cloudwatch-agent" 5
+mkdir -p /opt/aws/amazon-cloudwatch-agent
+
+# Write out a config for disk usage
+cat << 'EOF' | tee /opt/aws/amazon-cloudwatch-agent/config.json
+{
+  "agent": {
+    "metrics_collection_interval": 60,
+  },
+  "metrics": {
+    "namespace": "CWAgent",
+    "append_dimensions": {
+      "ImageId": "$${aws:ImageId}",
+      "InstanceId": "$${aws:InstanceId}",
+      "InstanceType": "$${aws:InstanceType}",
+      "AutoScalingGroupName": "$${aws:AutoScalingGroupName}"
+    },
+    "metrics_collected": {
+      "disk": {
+        "measurement": [
+          { "name": "used_percent", "rename": "Disk_Usage_Percent", "units": "Percent" }
+        ]
+      }
+    }
+  }
+}
+EOF
+
+# Install Tailscale
 echo "Installing Tailscale..."
 retry_command "dnf install -y dnf-utils" 5
 retry_command "dnf config-manager --add-repo https://pkgs.tailscale.com/stable/amazon-linux/2/tailscale.repo" 5

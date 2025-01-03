@@ -125,3 +125,8 @@ resource "aws_iam_role_policy_attachment" "default" {
   role       = module.tailscale_subnet_router.role_id
   policy_arn = module.ssm_policy[0].policy_arn
 }
+
+resource "aws_iam_role_policy_attachment" "cw_agent" {
+  role       = module.tailscale_subnet_router.role_id
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
