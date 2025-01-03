@@ -8,6 +8,24 @@ echo 'net.ipv4.ip_forward = 1' >> /etc/sysctl.conf
 echo 'net.ipv6.conf.all.forwarding = 1' >> /etc/sysctl.conf
 sysctl -p /etc/sysctl.conf
 
+# In systemd, Administrator drop-ins should reside in /etc/systemd/, ensuring they
+# are preserved across updates and have higher precedence than vendor defaults.
+#
+# We name our file 99-custom.conf so it loads last among any .conf files.
+# That way, it overrides any settings that come earlier.
+
+# Create the journald configs directory if it doesn't already exist
+mkdir -p /etc/systemd/journald.conf.d
+
+cat <<EOF > /etc/systemd/journald.conf.d/99-custom.conf
+[Journal]
+SystemMaxUse=${journald_system_max_use}
+MaxRetentionSec=${journald_max_retention_sec}
+EOF
+
+# Restart journald so it picks up the new configuration
+systemctl restart systemd-journald
+
 # Function to retry a command up to a maximum number of attempts
 retry_command() {
   local cmd="$1"

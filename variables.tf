@@ -80,7 +80,7 @@ variable "ami" {
 }
 
 variable "instance_type" {
-  default     = "t3.nano"
+  default     = "t4g.nano"
   type        = string
   description = "The instance type to use for the Tailscale Subnet Router EC2 instance."
 }
@@ -115,6 +115,17 @@ variable "desired_capacity" {
   default     = 1
 }
 
+variable "journald_system_max_use" {
+  description = "Disk space the journald may use up at most"
+  type        = string
+  default     = "200M"
+}
+
+variable "journald_max_retention_sec" {
+  description = "The maximum time to store journal entries."
+  type        = string
+  default     = "7d"
+}
 ################
 ## Tailscale ##
 ##############

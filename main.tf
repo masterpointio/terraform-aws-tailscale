@@ -26,6 +26,9 @@ locals {
     tailscaled_extra_flags           = local.tailscaled_extra_flags
     tailscale_up_extra_flags_enabled = local.tailscale_up_extra_flags_enabled
     tailscale_up_extra_flags         = join(" ", var.tailscale_up_extra_flags)
+
+    journald_system_max_use    = var.journald_system_max_use
+    journald_max_retention_sec = var.journald_max_retention_sec
   })
 }
 
@@ -33,8 +36,9 @@ locals {
 # Bucket does not have versioning enabled
 # trivy:ignore:AVD-AWS-0090
 module "tailscale_subnet_router" {
-  source  = "masterpointio/ssm-agent/aws"
-  version = "1.2.0"
+  # source  = "masterpointio/ssm-agent/aws"
+  # version = "1.2.0"
+  source = "git::https://github.com/masterpointio/terraform-aws-ssm-agent.git?ref=feature/ami-minimal-edition"
 
   context = module.this.context
   tags    = module.this.tags
