@@ -54,6 +54,12 @@ retry_command() {
   return $exit_code
 }
 
+# Install CloudWatch Agent
+echo "Installing CloudWatch Agent..."
+retry_command "dnf install -y amazon-cloudwatch-agent" 5
+amazon-cloudwatch-agent-ctl -a start -m ec2
+
+# Install Tailscale
 echo "Installing Tailscale..."
 retry_command "dnf install -y dnf-utils" 5
 retry_command "dnf config-manager --add-repo https://pkgs.tailscale.com/stable/amazon-linux/2/tailscale.repo" 5

@@ -36,9 +36,8 @@ locals {
 # Bucket does not have versioning enabled
 # trivy:ignore:AVD-AWS-0090
 module "tailscale_subnet_router" {
-  # source  = "masterpointio/ssm-agent/aws"
-  # version = "1.2.0"
-  source = "git::https://github.com/masterpointio/terraform-aws-ssm-agent.git?ref=feature/ami-minimal-edition"
+  source  = "masterpointio/ssm-agent/aws"
+  version = "1.3.0"
 
   context = module.this.context
   tags    = module.this.tags
@@ -124,4 +123,9 @@ resource "aws_iam_role_policy_attachment" "default" {
   count      = var.ssm_state_enabled ? 1 : 0
   role       = module.tailscale_subnet_router.role_id
   policy_arn = module.ssm_policy[0].policy_arn
+}
+
+resource "aws_iam_role_policy_attachment" "cw_agent" {
+  role       = module.tailscale_subnet_router.role_id
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
 }
