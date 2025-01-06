@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/v1.5.1...v1.6.0) (2025-01-06)
+
+
+### Features
+
+* enable log rotation + install CW Agent ([#48](https://github.com/masterpointio/terraform-aws-tailscale/issues/48)) ([560774b](https://github.com/masterpointio/terraform-aws-tailscale/commit/560774b0c2a4e5a0a4bcdc06d4c060dd16db4678))
+
 ## [1.5.1](https://github.com/masterpointio/terraform-aws-tailscale/compare/v1.5.0...v1.5.1) (2024-11-25)
 
 
