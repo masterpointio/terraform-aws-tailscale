@@ -8,6 +8,24 @@ echo 'net.ipv4.ip_forward = 1' >> /etc/sysctl.conf
 echo 'net.ipv6.conf.all.forwarding = 1' >> /etc/sysctl.conf
 sysctl -p /etc/sysctl.conf
 
+# In systemd, Administrator drop-ins should reside in /etc/systemd/, ensuring they
+# are preserved across updates and have higher precedence than vendor defaults.
+#
+# We name our file 99-custom.conf so it loads last among any .conf files.
+# That way, it overrides any settings that come earlier.
+
+# Create the journald configs directory if it doesn't already exist
+mkdir -p /etc/systemd/journald.conf.d
+
+cat <<EOF > /etc/systemd/journald.conf.d/99-custom.conf
+[Journal]
+SystemMaxUse=${journald_system_max_use}
+MaxRetentionSec=${journald_max_retention_sec}
+EOF
+
+# Restart journald so it picks up the new configuration
+systemctl restart systemd-journald
+
 # Function to retry a command up to a maximum number of attempts
 retry_command() {
   local cmd="$1"
@@ -36,6 +54,12 @@ retry_command() {
   return $exit_code
 }
 
+# Install CloudWatch Agent
+echo "Installing CloudWatch Agent..."
+retry_command "dnf install -y amazon-cloudwatch-agent" 5
+amazon-cloudwatch-agent-ctl -a start -m ec2
+
+# Install Tailscale
 echo "Installing Tailscale..."
 retry_command "dnf install -y dnf-utils" 5
 retry_command "dnf config-manager --add-repo https://pkgs.tailscale.com/stable/amazon-linux/2/tailscale.repo" 5

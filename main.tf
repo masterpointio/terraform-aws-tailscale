@@ -26,6 +26,9 @@ locals {
     tailscaled_extra_flags           = local.tailscaled_extra_flags
     tailscale_up_extra_flags_enabled = local.tailscale_up_extra_flags_enabled
     tailscale_up_extra_flags         = join(" ", var.tailscale_up_extra_flags)
+
+    journald_system_max_use    = var.journald_system_max_use
+    journald_max_retention_sec = var.journald_max_retention_sec
   })
 }
 
@@ -34,7 +37,7 @@ locals {
 # trivy:ignore:AVD-AWS-0090
 module "tailscale_subnet_router" {
   source  = "masterpointio/ssm-agent/aws"
-  version = "1.2.0"
+  version = "1.3.0"
 
   context = module.this.context
   tags    = module.this.tags
@@ -120,4 +123,9 @@ resource "aws_iam_role_policy_attachment" "default" {
   count      = var.ssm_state_enabled ? 1 : 0
   role       = module.tailscale_subnet_router.role_id
   policy_arn = module.ssm_policy[0].policy_arn
+}
+
+resource "aws_iam_role_policy_attachment" "cw_agent" {
+  role       = module.tailscale_subnet_router.role_id
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
 }
