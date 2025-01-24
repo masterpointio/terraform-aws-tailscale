@@ -67,6 +67,84 @@ To address this, our user data script configures both a maximum journal size and
 
 👀 To view these metrics, navigate in the AWS Console to “CWAgent” → “AutoScalingGroupName, ImageId, InstanceId, InstanceType, device, fstype, path” → “disk_used_percent” for the root path “/”.
 
+## Direct and Relayed Connections
+
+Tailscale supports two primary types of [connection types](https://tailscale.com/kb/1257/connection-types) for subnet routers:
+
+- **Direct (peer-to-peer)**: Nodes communicate directly with each other when possible, offering better performance and reliability.
+- **Relayed**: Traffic is routed through Tailscale's DERP (Designated Encrypted Relay for Packets) servers when direct connectivity isn't possible (e.g. when the subnet router is in a private VPC subnet).
+
+### Addressing Connection Stability Issues
+
+We've been using relayed connections for our subnet routers, but we've observed that relayed connections can sometimes cause intermittent connectivity issues, particularly when working with database connections through the Tailscale proxy (see [this issue](https://github.com/cyrilgdn/terraform-provider-postgresql/issues/495) for an example).
+
+These issues appear as connection timeouts or SOCKS server errors:
+
+```sh
+│ Error: Error connecting to PostgreSQL server dev.example.com (scheme: postgres): socks connect tcp localhost:1055->dev.example.com:5432: unknown error general SOCKS server failure
+│
+│   with data.postgresql_schemas.schemas["example"],
+│   on main.tf line 65, in data "postgresql_schemas" "schemas":
+│   65: data "postgresql_schemas" "schemas" {
+│
+╵
+netstack: decrementing connsInFlightByClient[100.0.108.92] because the packet was not handled; new value is 0
+[RATELIMIT] format("netstack: decrementing connsInFlightByClient[%v] because the packet was not handled; new value is %d")
+```
+
+### Configuring Direct Connections
+
+To optimize for direct connections in your Tailscale subnet router, follow this example:
+
+```hcl
+locals {
+  public_subnets = ["subnet-1234567890", "subnet-0987654321"]
+  vpc_id         = "vpc-1234567890"
+  direct_port    = "41641"
+}
+
+module "tailscale" {
+  source  = "masterpointio/tailscale/aws"
+  version = "1.6.0" # Or later
+  ...
+  # Direct connection configuration
+  subnet_ids = local.public_subnets  # Ensure subnet router is in a public subnet
+
+  additional_security_group_ids = [module.direct_sg.id]            # Attach the security group to the subnet router
+  tailscaled_extra_flags        = ["--port=${local.direct_port}"]  # Ensure `tailscaled` listens on the same port as the security group is configured
+
+  context = module.this.context
+}
+
+module "direct_sg" {
+  source  = "cloudposse/security-group/aws"
+  version = "2.2.0"
+  enabled = true
+
+  vpc_id     = local.vpc_id
+  attributes = ["tailscale", "direct"]
+
+  rules = [{
+    key         = "direct_ingress"
+    type        = "ingress"
+    from_port   = local.direct_port
+    to_port     = local.direct_port
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow a direct Tailscale connection from any peer."
+  }]
+
+  context = module.this.context
+}
+```
+
+The above configuration ensures that the subnet router can establish direct connections with other Tailscale nodes:
+
+1. It is in a public subnet and gets a public IP address.
+2. The security group is attached and configured to listen on a fixed port.
+3. The `tailscaled` daemon is configured to listen on the same port as the security group is configured to listen on.
+4. The outgoing UDP and TCP packets on port `443` are permitted. In our example, [`cloudposse/security-group/aws`](https://github.com/cloudposse/terraform-aws-security-group) module allows all egress.
+
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 
 ## Requirements
