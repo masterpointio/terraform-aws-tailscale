@@ -1,0 +1,64 @@
+{
+  "extends": [
+    "config:best-practices",
+    "github>aquaproj/aqua-renovate-config#2.7.5"
+  ],
+  "enabledManagers": [
+    "terraform",
+    "github-actions"
+  ],
+  "terraform": {
+    "ignorePaths": [
+      "**/context.tf" // Mixin file https://github.com/cloudposse/terraform-null-label/blob/main/exports/context.tf
+    ],
+    "fileMatch": [
+      "\\.tf$",
+      "\\.tofu$"
+    ]
+  },
+  "schedule": [
+    "after 9am on the first day of the month"
+  ],
+  "assigneesFromCodeOwners": true,
+  "dependencyDashboardAutoclose": true,
+  "addLabels": ["{{manager}}"],
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "automerge": true,
+      "automergeType": "branch",
+      "groupName": "github-actions-auto-upgrade",
+      "addLabels": ["auto-upgrade"]
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "github-actions-needs-review",
+      "addLabels": ["needs-review"]
+    },
+    {
+      "matchManagers": ["terraform"],
+      "groupName": "tf",
+      "addLabels": ["needs-review"]
+    },
+    {
+      "matchFileNames": ["**/*.tofu", "**/*.tf"],
+      "matchDatasources": ["terraform-provider", "terraform-module"],
+      "registryUrls": ["https://registry.opentofu.org"],
+      "groupName": "tf"
+    },
+    {
+      "matchFileNames": ["**/*.tofu"],
+      "matchDepTypes": ["required_version"],
+      "registryUrls": ["https://registry.opentofu.org"],
+      "groupName": "tf"
+    },
+    {
+      "matchFileNames": ["**/*.tf"],
+      "matchDepTypes": ["required_version"],
+      "registryUrls": ["https://registry.terraform.io"],
+      "groupName": "tf"
+    }
+  ]
+}
