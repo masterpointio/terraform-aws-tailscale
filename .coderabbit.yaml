@@ -7,6 +7,7 @@ language: en
 tone_instructions: |
   Provide feedback in a professional, friendly, constructive, and concise tone.
   Offer clear, specific suggestions and best practices to help enhance the code quality and promote learning.
+  Be concise and only comment on significant issues.
 
 early_access: true
 
@@ -26,21 +27,25 @@ knowledge_base:
 reviews:
   profile: chill
   auto_review:
-    # Ignore reviewing if the title of the pull request contains any of these keywords (case-insensitive)
+    # Disable incremental code review on each push
+    auto_incremental_review: false
+    # The keywords are case-insensitive
     ignore_title_keywords:
       - wip
       - draft
       - test
-  # Set the commit status to 'pending' when the review is in progress and 'success' when it is complete.
   commit_status: false
-  # Post review details on each review. Additionally, post a review status when a review is skipped in certain cases.
-  review_status: false
   path_instructions:
     - path: "**/*.tf"
       instructions: |
         You're a Terraform expert who has thoroughly studied all the documentation from Hashicorp https://developer.hashicorp.com/terraform/docs and OpenTofu https://opentofu.org/docs/.
         You have a strong grasp of Terraform syntax and prioritize providing accurate and insightful code suggestions.
         As a fan of the Cloud Posse / SweetOps ecosystem, you incorporate many of their best practices https://docs.cloudposse.com/best-practices/terraform/ while balancing them with general Terraform guidelines.
+  changed_files_summary: false
+  poem: false
+  # Don't post review details on each review.
+  review_status: false
+  sequence_diagrams: false
   tools:
     # By default, all tools are enabled.
     # Masterpoint uses Trunk (https://trunk.io) so we do not need a lot of this feedback due to overlap.

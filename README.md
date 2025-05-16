@@ -1,10 +1,14 @@
-[![Masterpoint Logo](https://i.imgur.com/RDLnuQO.png)](https://masterpoint.io)
+[![Banner][banner-image]](https://masterpoint.io/)
 
-# terraform-aws-tailscale [![Latest Release](https://img.shields.io/github/release/masterpointio/terraform-aws-tailscale.svg)](https://github.com/masterpointio/terraform-aws-tailscale/releases/latest)
+# terraform-aws-tailscale
+
+[![Release][release-badge]][latest-release]
+
+💡 Learn more about Masterpoint [below](#who-we-are-𐦂𖨆𐀪𖠋).
+
+## Purpose and Functionality
 
 This is a Terraform Module to create a simple, autoscaled [Tailscale Subnet Router](https://tailscale.com/kb/1019/subnets/) on EC2 instance along with generated auth key, and its corresponding IAM resources. The instance should cycle itself on a schedule.
-
-It's 100% Open Source and licensed under the [APACHE2](LICENSE).
 
 ## Usage
 
@@ -145,22 +149,23 @@ The above configuration ensures that the subnet router can establish direct conn
 3. The `tailscaled` daemon is configured to listen on the same port as the security group is configured to listen on.
 4. The outgoing UDP and TCP packets on port `443` are permitted. In our example, [`cloudposse/security-group/aws`](https://github.com/cloudposse/terraform-aws-security-group) module allows all egress.
 
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable MD013 -->
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
-
 ## Requirements
 
-| Name                                                                     | Version   |
-| ------------------------------------------------------------------------ | --------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement_terraform) | >= 1.0    |
-| <a name="requirement_aws"></a> [aws](#requirement_aws)                   | >= 4.0    |
-| <a name="requirement_tailscale"></a> [tailscale](#requirement_tailscale) | >= 0.13.7 |
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0 |
+| <a name="requirement_tailscale"></a> [tailscale](#requirement\_tailscale) | >= 0.13.7 |
 
 ## Providers
 
-| Name                                                               | Version   |
-| ------------------------------------------------------------------ | --------- |
-| <a name="provider_aws"></a> [aws](#provider_aws)                   | >= 4.0    |
-| <a name="provider_tailscale"></a> [tailscale](#provider_tailscale) | >= 0.13.7 |
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0 |
+| <a name="provider_tailscale"></a> [tailscale](#provider\_tailscale) | >= 0.13.7 |
 
 ## Modules
 
@@ -173,11 +178,11 @@ The above configuration ensures that the subnet router can establish direct conn
 
 ## Resources
 
-| Name                                                                                                                                              | Type     |
-| ------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| Name | Type |
+|------|------|
 | [aws_iam_role_policy_attachment.cw_agent](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
-| [aws_iam_role_policy_attachment.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment)  | resource |
-| [tailscale_tailnet_key.default](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/tailnet_key)                    | resource |
+| [aws_iam_role_policy_attachment.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [tailscale_tailnet_key.default](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/tailnet_key) | resource |
 
 ## Inputs
 
@@ -235,11 +240,75 @@ The above configuration ensures that the subnet router can establish direct conn
 
 ## Outputs
 
-| Name                                                                                            | Description                                                           |
-| ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| <a name="output_autoscaling_group_id"></a> [autoscaling_group_id](#output_autoscaling_group_id) | The ID of the Tailscale Subnet Router EC2 instance Autoscaling Group. |
-| <a name="output_instance_name"></a> [instance_name](#output_instance_name)                      | The name tag value of the Tailscale Subnet Router EC2 instance.       |
-| <a name="output_launch_template_id"></a> [launch_template_id](#output_launch_template_id)       | The ID of the Tailscale Subnet Router EC2 instance Launch Template.   |
-| <a name="output_security_group_id"></a> [security_group_id](#output_security_group_id)          | The ID of the Tailscale Subnet Router EC2 instance Security Group.    |
-
+| Name | Description |
+|------|-------------|
+| <a name="output_autoscaling_group_id"></a> [autoscaling\_group\_id](#output\_autoscaling\_group\_id) | The ID of the Tailscale Subnet Router EC2 instance Autoscaling Group. |
+| <a name="output_instance_name"></a> [instance\_name](#output\_instance\_name) | The name tag value of the Tailscale Subnet Router EC2 instance. |
+| <a name="output_launch_template_id"></a> [launch\_template\_id](#output\_launch\_template\_id) | The ID of the Tailscale Subnet Router EC2 instance Launch Template. |
+| <a name="output_security_group_id"></a> [security\_group\_id](#output\_security\_group\_id) | The ID of the Tailscale Subnet Router EC2 instance Security Group. |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- markdownlint-enable MD013 -->
+<!-- prettier-ignore-end -->
+
+## Built By
+
+Powered by the [Masterpoint team](https://masterpoint.io/who-we-are/) and driven forward by contributions from the community ❤️
+
+[![Contributors][contributors-image]][contributors-url]
+
+## Contribution Guidelines
+
+Contributions are welcome and appreciated!
+
+Found an issue or want to request a feature? [Open an issue][issues-url]
+
+Want to fix a bug you found or add some functionality? Fork, clone, commit, push, and PR — we'll check it out.
+
+## Who We Are 𐦂𖨆𐀪𖠋
+
+Established in 2016, Masterpoint is a team of experienced software and platform engineers specializing in Infrastructure as Code (IaC). We provide expert guidance to organizations of all sizes, helping them leverage the latest IaC practices to accelerate their engineering teams.
+
+### Our Mission
+
+Our mission is to simplify cloud infrastructure so developers can innovate faster, safer, and with greater confidence. By open-sourcing tools and modules that we use internally, we aim to contribute back to the community, promoting consistency, quality, and security.
+
+### Our Commitments
+
+- 🌟 **Open Source**: We live and breathe open source, contributing to and maintaining hundreds of projects across multiple organizations.
+- 🌎 **1% for the Planet**: Demonstrating our commitment to environmental sustainability, we are proud members of [1% for the Planet](https://www.onepercentfortheplanet.org), pledging to donate 1% of our annual sales to environmental nonprofits.
+- 🇺🇦 **1% Towards Ukraine**: With team members and friends affected by the ongoing [Russo-Ukrainian war](https://en.wikipedia.org/wiki/Russo-Ukrainian_War), we donate 1% of our annual revenue to invasion relief efforts, supporting organizations providing aid to those in need. [Here's how you can help Ukraine with just a few clicks](https://masterpoint.io/updates/supporting-ukraine/).
+
+## Connect With Us
+
+We're active members of the community and are always publishing content, giving talks, and sharing our hard earned expertise. Here are a few ways you can see what we're up to:
+
+[![LinkedIn][linkedin-badge]][linkedin-url] [![Newsletter][newsletter-badge]][newsletter-url] [![Blog][blog-badge]][blog-url] [![YouTube][youtube-badge]][youtube-url]
+
+... and be sure to connect with our founder, [Matt Gowie](https://www.linkedin.com/in/gowiem/).
+
+## License
+
+[Apache License, Version 2.0][license-url].
+
+[![Open Source Initiative][osi-image]][license-url]
+
+Copyright © 2016-2025 [Masterpoint Consulting LLC](https://masterpoint.io/)
+
+<!-- MARKDOWN LINKS & IMAGES -->
+
+[banner-image]: https://masterpoint-public.s3.us-west-2.amazonaws.com/v2/standard-long-fullcolor.png
+[license-url]: https://opensource.org/license/apache-2-0
+[osi-image]: https://i0.wp.com/opensource.org/wp-content/uploads/2023/03/cropped-OSI-horizontal-large.png?fit=250%2C229&ssl=1
+[linkedin-badge]: https://img.shields.io/badge/LinkedIn-Follow-0A66C2?style=for-the-badge&logoColor=white
+[linkedin-url]: https://www.linkedin.com/company/masterpoint-consulting
+[blog-badge]: https://img.shields.io/badge/Blog-IaC_Insights-55C1B4?style=for-the-badge&logoColor=white
+[blog-url]: https://masterpoint.io/updates/
+[newsletter-badge]: https://img.shields.io/badge/Newsletter-Subscribe-ECE295?style=for-the-badge&logoColor=222222
+[newsletter-url]: https://newsletter.masterpoint.io/
+[youtube-badge]: https://img.shields.io/badge/YouTube-Subscribe-D191BF?style=for-the-badge&logo=youtube&logoColor=white
+[youtube-url]: https://www.youtube.com/channel/UCeeDaO2NREVlPy9Plqx-9JQ
+[release-badge]: https://img.shields.io/github/v/release/masterpointio/terraform-aws-tailscale?color=0E383A&label=Release&style=for-the-badge&logo=github&logoColor=white
+[latest-release]: https://github.com/masterpointio/terraform-aws-tailscale/releases/latest
+[contributors-image]: https://contrib.rocks/image?repo=masterpointio/terraform-aws-tailscale
+[contributors-url]: https://github.com/masterpointio/terraform-aws-tailscale/graphs/contributors
+[issues-url]: https://github.com/masterpointio/terraform-aws-tailscale/issues

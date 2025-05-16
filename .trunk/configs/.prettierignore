@@ -1,4 +1,0 @@
-# `release-please` doesn't generate prettier compliant output, see relevant issues:
-# https://github.com/googleapis/release-please/issues/1902
-# https://github.com/googleapis/release-please/issues/1802
-CHANGELOG.md

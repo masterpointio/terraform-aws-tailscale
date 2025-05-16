@@ -1,0 +1,28 @@
+name: TF Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  checks: write
+  contents: read
+  id-token: write
+  pull-requests: read
+
+jobs:
+  tf-test:
+    name: 🧪 ${{ matrix.tf }} test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        tf: [tofu, terraform]
+    steps:
+      - uses: masterpointio/github-action-tf-test@c3b619f3bca9e4f482b9e0fb3166ab3f02d9d54c # v1.0.0
+        with:
+          tf_type: ${{ matrix.tf }}
+          aws_role_arn: ${{ vars.TF_TEST_AWS_ROLE_ARN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
