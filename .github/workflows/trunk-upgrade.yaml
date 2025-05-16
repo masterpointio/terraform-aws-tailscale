@@ -1,25 +1,43 @@
-name: Monthly Trunk Upgrade
+name: Trunk Upgrade
+
 on:
   schedule:
     # On the first day of every month @ 8am
     - cron: 0 8 1 * *
-    # Allows us to manually run the workflow from Actions UI
   workflow_dispatch: {}
+
 permissions: read-all
+
 jobs:
-  trunk_upgrade:
-    name: Upgrade Trunk
+  trunk-upgrade:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # For trunk to create PRs
-      pull-requests: write # For trunk to create PRs
+      # For trunk to create PRs
+      contents: write
+      pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Trunk Upgrade
-        uses: trunk-io/trunk-action/upgrade@2eaee169140ec559bd556208f9f99cdfdf468da8 # v1.1.18
+      - name: Create Token for MasterpointBot App
+        uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a #v2.1.0
+        id: generate-token
         with:
-          base: main
+          app_id: ${{ secrets.MP_BOT_APP_ID }}
+          private_key: ${{ secrets.MP_BOT_APP_PRIVATE_KEY }}
+
+      - name: Upgrade
+        id: trunk-upgrade
+        uses: trunk-io/trunk-action/upgrade@4d5ecc89b2691705fd08c747c78652d2fc806a94 # v1.1.19
+        with:
+          github-token: ${{ steps.generate-token.outputs.token }}
           reviewers: "@masterpointio/masterpoint-internal"
           prefix: "chore: "
+
+      - name: Merge PR automatically
+        if: steps.trunk-upgrade.outputs.pull-request-number != ''
+        env:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          PR_NUMBER: ${{ steps.trunk-upgrade.outputs.pull-request-number }}
+        run: |
+          gh pr merge "$PR_NUMBER" --squash --auto --delete-branch

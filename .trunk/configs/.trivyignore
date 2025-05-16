@@ -1,8 +1,0 @@
-# Log group is not encrypted
-AVD-AWS-0017
-
-# Bucket does not have versioning enabled
-AVD-AWS-0090
-
-# Bucket does not encrypt data with a customer managed key
-AVD-AWS-0132
