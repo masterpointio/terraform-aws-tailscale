@@ -18,6 +18,23 @@ variable "additional_security_group_ids" {
   description = "Additional Security Group IDs to associate with the Tailscale Subnet Router EC2 instance."
 }
 
+variable "additional_security_group_rules" {
+  description = "Additional security group rules that will be attached to the primary security group"
+  type = map(object({
+    type      = string
+    from_port = number
+    to_port   = number
+    protocol  = string
+
+    description      = optional(string)
+    cidr_blocks      = optional(list(string))
+    ipv6_cidr_blocks = optional(list(string))
+    prefix_list_ids  = optional(list(string))
+    self             = optional(bool)
+  }))
+  default = {}
+}
+
 variable "create_run_shell_document" {
   default     = true
   type        = bool
