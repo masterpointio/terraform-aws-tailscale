@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/v1.7.0...v1.8.0) (2025-05-22)
+
+
+### Features
+
+* Expose the "architecture" variable ([#58](https://github.com/masterpointio/terraform-aws-tailscale/issues/58)) ([8662e72](https://github.com/masterpointio/terraform-aws-tailscale/commit/8662e722bccd056a64fa720ba2fecbec7f5bb51d))
+
 ## [1.7.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/v1.6.0...v1.7.0) (2025-05-16)
 
 
