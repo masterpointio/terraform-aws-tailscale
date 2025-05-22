@@ -96,6 +96,12 @@ variable "ami" {
   EOF
 }
 
+variable "architecture" {
+  default     = "arm64"
+  type        = string
+  description = "The architecture of the AMI (e.g., x86_64, arm64)"
+}
+
 variable "instance_type" {
   default     = "t4g.nano"
   type        = string
