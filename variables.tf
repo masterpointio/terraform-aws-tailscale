@@ -18,6 +18,23 @@ variable "additional_security_group_ids" {
   description = "Additional Security Group IDs to associate with the Tailscale Subnet Router EC2 instance."
 }
 
+variable "additional_security_group_rules" {
+  description = "Additional security group rules that will be attached to the primary security group"
+  type = map(object({
+    type      = string
+    from_port = number
+    to_port   = number
+    protocol  = string
+
+    description      = optional(string)
+    cidr_blocks      = optional(list(string))
+    ipv6_cidr_blocks = optional(list(string))
+    prefix_list_ids  = optional(list(string))
+    self             = optional(bool)
+  }))
+  default = {}
+}
+
 variable "create_run_shell_document" {
   default     = true
   type        = bool
@@ -77,6 +94,12 @@ variable "ami" {
   Note: This will update periodically as AWS releases updates to their AL2 AMI.
   Pin to a specific AMI if you would like to avoid these updates.
   EOF
+}
+
+variable "architecture" {
+  default     = "arm64"
+  type        = string
+  description = "The architecture of the AMI (e.g., x86_64, arm64)"
 }
 
 variable "instance_type" {

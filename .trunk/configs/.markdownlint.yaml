@@ -12,3 +12,8 @@ whitespace: false
 # Ignore MD041/first-line-heading/first-line-h1
 # Error: First line in a file should be a top-level heading
 MD041: false
+
+# Ignore MD013/line-length
+MD013:
+  strict: false
+  line_length: 350
