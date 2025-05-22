@@ -55,6 +55,7 @@ module "tailscale_subnet_router" {
   session_logging_ssm_document_name = var.session_logging_ssm_document_name
 
   ami              = var.ami
+  architecture     = var.architecture
   instance_type    = var.instance_type
   max_size         = var.max_size
   min_size         = var.min_size
