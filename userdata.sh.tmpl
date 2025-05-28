@@ -3,6 +3,19 @@ exec > >(tee /var/log/user-data.log | logger -t user-data -s 2>/dev/console) 2>&
 
 echo "Starting user-data script..."
 
+echo "Determining package manager..."
+
+# Work with both dnf and apt-get.
+if command -v apt-get >/dev/null 2>&1; then
+  PKG_MANAGER=apt-get
+  INSTALL_CMD="apt-get install -y"
+else
+  PKG_MANAGER=dnf
+  INSTALL_CMD="dnf install -y"
+fi
+
+echo "Detected the following package manager: $PKG_MANAGER."
+
 echo "Enabling IP forwarding..."
 echo 'net.ipv4.ip_forward = 1' >> /etc/sysctl.conf
 echo 'net.ipv6.conf.all.forwarding = 1' >> /etc/sysctl.conf
@@ -54,25 +67,60 @@ retry_command() {
   return $exit_code
 }
 
-# Install CloudWatch Agent
-echo "Installing CloudWatch Agent..."
-retry_command "dnf install -y amazon-cloudwatch-agent" 5
+# Function to install necessary packages per distro.
+install_packages() {
+  case "$PKG_MANAGER" in
+    apt-get)
+      # Update package cache.
+      echo "Updating package cache..."
+      retry_command "$PKG_MANAGER update" 5
+
+      # Install utilities.
+      echo "Installing utilities..."
+      retry_command "$INSTALL_CMD curl wget" 5
+
+      # Install CloudWatch Agent.
+      echo "Installing CloudWatch Agent..."
+      distro=$(grep '^ID=' /etc/os-release | cut -d'=' -f2)
+      arch=$(uname -m)
+      case "$arch" in
+        x86_64)
+          arch=amd64
+          ;;
+        *)
+          arch=arm64
+          ;;
+      esac
+      retry_command "wget https://amazoncloudwatch-agent.s3.amazonaws.com/$distro/$arch/latest/amazon-cloudwatch-agent.deb" 5
+      retry_command "dpkg -i -E ./amazon-cloudwatch-agent.deb" 5
+      ;;
+    *)
+      # Install utilities.
+      echo "Installing utilities..."
+      retry_command "$INSTALL_CMD dnf-utils" 5
+
+      # Install CloudWatch Agent.
+      echo "Installing CloudWatch Agent..."
+      retry_command "$INSTALL_CMD amazon-cloudwatch-agent" 5
+      ;;
+  esac
+}
+
+# Install necessary packages.
+echo "Installing necessary packages..."
+install_packages
+
+# Start the CloudWatch Agent.
 amazon-cloudwatch-agent-ctl -a start -m ec2
 
 # Install Tailscale
 echo "Installing Tailscale..."
-retry_command "dnf install -y dnf-utils" 5
-retry_command "dnf config-manager --add-repo https://pkgs.tailscale.com/stable/amazon-linux/2/tailscale.repo" 5
-retry_command "dnf install -y tailscale" 5
+retry_command "curl -fsSL https://tailscale.com/install.sh | sh" 5
 
 %{ if tailscaled_extra_flags_enabled == true }
 echo "Exporting FLAGS to /etc/default/tailscaled..."
 sed -i "s|^FLAGS=.*|FLAGS=\"${tailscaled_extra_flags}\"|" /etc/default/tailscaled
 %{ endif }
-
-# Setup Tailscale
-echo "Enabling and starting tailscaled service..."
-systemctl enable --now tailscaled
 
 echo "Waiting for tailscaled to initialize..."
 sleep 5
