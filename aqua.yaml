@@ -8,7 +8,10 @@
 #   - all
 registries:
   - type: standard
-    ref: v4.137.0 # renovate: depName=aquaproj/aqua-registry
+    ref: v4.355.0 # renovate: depName=aquaproj/aqua-registry
 packages:
-  - name: hashicorp/terraform@v1.7.3
-  - name: opentofu/opentofu@v1.6.1
+  - name: terraform-docs/terraform-docs@v0.20.0
+  - name: hashicorp/terraform@v1.11.4
+    tags: [terraform]
+  - name: opentofu/opentofu@v1.9.1
+    tags: [tofu]

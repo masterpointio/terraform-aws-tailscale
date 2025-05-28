@@ -37,7 +37,7 @@ locals {
 # trivy:ignore:AVD-AWS-0090
 module "tailscale_subnet_router" {
   source  = "masterpointio/ssm-agent/aws"
-  version = "1.3.0"
+  version = "1.4.0"
 
   context = module.this.context
   tags    = module.this.tags
@@ -47,13 +47,15 @@ module "tailscale_subnet_router" {
   key_pair_name             = var.key_pair_name
   create_run_shell_document = var.create_run_shell_document
 
-  additional_security_group_ids = var.additional_security_group_ids
+  additional_security_group_ids   = var.additional_security_group_ids
+  additional_security_group_rules = var.additional_security_group_rules
 
   session_logging_kms_key_alias     = var.session_logging_kms_key_alias
   session_logging_enabled           = var.session_logging_enabled
   session_logging_ssm_document_name = var.session_logging_ssm_document_name
 
   ami              = var.ami
+  architecture     = var.architecture
   instance_type    = var.instance_type
   max_size         = var.max_size
   min_size         = var.min_size

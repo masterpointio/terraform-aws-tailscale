@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.8.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/v1.7.0...v1.8.0) (2025-05-22)
+
+
+### Features
+
+* Expose the "architecture" variable ([#58](https://github.com/masterpointio/terraform-aws-tailscale/issues/58)) ([8662e72](https://github.com/masterpointio/terraform-aws-tailscale/commit/8662e722bccd056a64fa720ba2fecbec7f5bb51d))
+
+## [1.7.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/v1.6.0...v1.7.0) (2025-05-16)
+
+
+### Features
+
+* allow configuring additional security group rules ([#56](https://github.com/masterpointio/terraform-aws-tailscale/issues/56)) ([e854ea0](https://github.com/masterpointio/terraform-aws-tailscale/commit/e854ea03f2fe100ed9a4e6de7ece462dccc9c485))
+
 ## [1.6.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/v1.5.1...v1.6.0) (2025-01-06)
 
 
