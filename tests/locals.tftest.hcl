@@ -1,3 +1,4 @@
+# Mock tailscale provider because it expects a real authentication (so we provide it a fake tailscale_tailnet_key)
 mock_provider "tailscale" {
   mock_resource "tailscale_tailnet_key" {
     defaults = {
@@ -63,5 +64,29 @@ run "test_local_userdata_rendered_template" {
   assert {
     condition = strcontains(local.userdata, "tag:test-tag1") && strcontains(local.userdata, "tag:test-tag2")
     error_message = "Expected userdata to contain additional tags"
+  }
+}
+
+run "test_tailscaled_extra_flags" {
+  command = plan
+
+  variables {
+    vpc_id      = "vpc-test123"
+    subnet_ids  = ["subnet-test123"]
+    namespace   = "test"
+    name        = "tailscale"
+    tailscaled_extra_flags = ["--state=mem:", "--verbose=1"]
+  }
+
+  # Test that tailscaled_extra_flags are rendered in userdata
+  assert {
+    condition = strcontains(local.userdata, "--state=mem:") && strcontains(local.userdata, "--verbose=1")
+    error_message = "Expected userdata to contain tailscaled extra flags"
+  }
+
+  # Test that tailscaled_extra_flags are rendered in userdata
+  assert {
+    condition = strcontains(local.userdata, "--state=mem:") && strcontains(local.userdata, "--verbose=1")
+    error_message = "Expected userdata to contain tailscaled extra flags"
   }
 }
