@@ -10,7 +10,19 @@ mock_provider "tailscale" {
     values = {
       key = "fake-tailscale-tailnet-key"
     }
-    override_during = plan
+  }
+}
+
+mock_provider "aws" {
+  mock_data "aws_iam_policy_document" {
+    defaults = {
+      json = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ec2.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
+    }
+  }
+  mock_resource "aws_launch_template" {
+    defaults = {
+      id = "lt-mock123456789"
+    }
   }
 }
 
@@ -39,7 +51,7 @@ run "test_primary_tag_provided" {
 }
 
 run "test_local_userdata_rendered_template" {
-  command = plan
+  command = apply # because we need access to the tailscale_tailnet_key.default.key value
 
   variables {
     vpc_id      = "vpc-test123"
@@ -68,7 +80,7 @@ run "test_local_userdata_rendered_template" {
 }
 
 run "test_tailscaled_extra_flags" {
-  command = plan
+  command = apply # because we need access to the tailscale_tailnet_key.default.key value
 
   variables {
     vpc_id      = "vpc-test123"
@@ -76,12 +88,6 @@ run "test_tailscaled_extra_flags" {
     namespace   = "test"
     name        = "tailscale"
     tailscaled_extra_flags = ["--state=mem:", "--verbose=1"]
-  }
-
-  # Test that tailscaled_extra_flags are rendered in userdata
-  assert {
-    condition = strcontains(local.userdata, "--state=mem:") && strcontains(local.userdata, "--verbose=1")
-    error_message = "Expected userdata to contain tailscaled extra flags"
   }
 
   # Test that tailscaled_extra_flags are rendered in userdata
