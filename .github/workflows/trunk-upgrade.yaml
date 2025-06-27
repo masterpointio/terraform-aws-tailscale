@@ -34,10 +34,29 @@ jobs:
           reviewers: "@masterpointio/masterpoint-internal"
           prefix: "chore: "
 
-      - name: Merge PR automatically
+      - name: Wait for checks to pass + Merge PR
         if: steps.trunk-upgrade.outputs.pull-request-number != ''
         env:
-          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
           PR_NUMBER: ${{ steps.trunk-upgrade.outputs.pull-request-number }}
         run: |
-          gh pr merge "$PR_NUMBER" --squash --auto --delete-branch
+          echo "Waiting for required status checks to pass on PR #$PR_NUMBER..."
+          while true; do
+            CHECKS_JSON=$(gh pr checks "$PR_NUMBER" --required --json state,bucket)
+            echo "Current checks status: $CHECKS_JSON"
+
+            if echo "$CHECKS_JSON" | jq -e '.[] | select(.bucket=="fail")' > /dev/null; then
+              echo "One or more required checks have failed. Exiting..."
+              exit 1
+            fi
+
+            FAILED_OR_PENDING_CHECKS=$(echo "$CHECKS_JSON" | jq '[.[] | select(.state!="SUCCESS" or .bucket!="pass")] | length')
+            if [ "$FAILED_OR_PENDING_CHECKS" -eq 0 ]; then
+              echo "All required checks passed. Merging PR https://github.com/${{ github.repository }}/pull/$PR_NUMBER..."
+              gh pr merge "$PR_NUMBER" --squash --delete-branch --admin
+              break
+            else
+              echo "Some required checks are still running or pending. Retrying in 30s..."
+              sleep 30
+            fi
+          done
