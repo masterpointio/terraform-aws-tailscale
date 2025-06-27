@@ -44,3 +44,6 @@ backend.tf.json
 **/*.bak
 **/*.*swp
 **/.DS_Store
+
+.claude/settings.local.json
+CLAUDE.md
