@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/v1.8.0...v1.9.0) (2025-07-01)
+
+
+### Features
+
+* add basic tests for local variables ([#65](https://github.com/masterpointio/terraform-aws-tailscale/issues/65)) ([75fd25c](https://github.com/masterpointio/terraform-aws-tailscale/commit/75fd25c889bc949cad71f137f8b0c024107f0670))
+
 ## [1.8.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/v1.7.0...v1.8.0) (2025-05-22)
 
 
