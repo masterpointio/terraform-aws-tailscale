@@ -40,7 +40,7 @@ backend.tf.json
 
 # Other
 **/*.backup
-***/*.tmp
+**/*.tmp
 **/*.temp
 **/*.bak
 **/*.*swp
