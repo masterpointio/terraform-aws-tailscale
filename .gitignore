@@ -46,6 +46,7 @@ backend.tf.json
 **/*.*swp
 **/.DS_Store
 
-# Claude Code - we beleive engineers are responsible for the code they push no matter how it's generated.
-# Therefore, configs specific to their coding practices are their responsibilty to judiciously manage.
+# AI code gen tools - we beleive engineers are responsible for the code they push no matter how it's generated
 .claude/*
+.cursor/*
+CLAUDE.md
