@@ -101,8 +101,8 @@ module "ssm_policy" {
   source  = "cloudposse/iam-policy/aws"
   version = "2.0.1"
 
-  name        = "ssm"
-  description = "Additional SSM access for SSM Agent"
+  name        = var.ssm_policy_name
+  description = "Additional SSM access for SSM Agent of ${module.this.id} subnet router."
 
   iam_policy_enabled = true
   iam_policy = [{

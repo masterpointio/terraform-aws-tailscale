@@ -242,3 +242,14 @@ variable "ssm_state_enabled" {
   See more in the [docs](https://tailscale.com/kb/1278/tailscaled#flags-to-tailscaled).
   EOT
 }
+
+variable "ssm_policy_name" {
+  default     = "ssm"
+  type        = string
+  description = <<EOF
+  The name of the SSM policy to create.
+  This is used to attach the SSM policy to the Tailscale Subnet Router EC2 instance.
+  This is only applied if `ssm_state_enabled` is true.
+  Multiple instances of this module can be used in the same account by setting a unique `ssm_policy_name` for each instance.
+  EOF
+}
