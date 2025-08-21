@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.9.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/v1.8.0...v1.9.0) (2025-08-21)
+
+
+### Features
+
+* add basic tests for local variables ([#65](https://github.com/masterpointio/terraform-aws-tailscale/issues/65)) ([75fd25c](https://github.com/masterpointio/terraform-aws-tailscale/commit/75fd25c889bc949cad71f137f8b0c024107f0670))
+
+
+### Bug Fixes
+
+* enable multiple replicas for subnet router ([#69](https://github.com/masterpointio/terraform-aws-tailscale/issues/69)) ([190b644](https://github.com/masterpointio/terraform-aws-tailscale/commit/190b644762b5a7ecdc9a894f322a8bcfa4db1ff0))
+
 ## [1.8.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/v1.7.0...v1.8.0) (2025-05-22)
 
 
