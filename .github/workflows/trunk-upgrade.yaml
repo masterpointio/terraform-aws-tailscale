@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Run Trunk Upgrade
-        uses: masterpointio/github-action-trunk-upgrade@feat/inital-version
+        uses: masterpointio/github-action-trunk-upgrade@v0.1.0
         with:
           app-id: ${{ secrets.MP_BOT_APP_ID }}
           app-private-key: ${{ secrets.MP_BOT_APP_PRIVATE_KEY }}
