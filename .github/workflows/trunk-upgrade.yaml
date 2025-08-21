@@ -19,25 +19,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Create Token for MasterpointBot App
-        uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a #v2.1.0
-        id: generate-token
+      - name: Run Trunk Upgrade
+        uses: masterpointio/github-action-trunk-upgrade@v0.1.0
         with:
-          app_id: ${{ secrets.MP_BOT_APP_ID }}
-          private_key: ${{ secrets.MP_BOT_APP_PRIVATE_KEY }}
-
-      - name: Upgrade
-        id: trunk-upgrade
-        uses: trunk-io/trunk-action/upgrade@4d5ecc89b2691705fd08c747c78652d2fc806a94 # v1.1.19
-        with:
-          github-token: ${{ steps.generate-token.outputs.token }}
-          reviewers: "@masterpointio/masterpoint-internal"
-          prefix: "chore: "
-
-      - name: Merge PR automatically
-        if: steps.trunk-upgrade.outputs.pull-request-number != ''
-        env:
-          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-          PR_NUMBER: ${{ steps.trunk-upgrade.outputs.pull-request-number }}
-        run: |
-          gh pr merge "$PR_NUMBER" --squash --auto --delete-branch
+          app-id: ${{ secrets.MP_BOT_APP_ID }}
+          app-private-key: ${{ secrets.MP_BOT_APP_PRIVATE_KEY }}
+          github-token: ${{ secrets.MASTERPOINT_TEAM_PAT }}
+          reviewers: "@masterpointio/masterpoint-open-source"
