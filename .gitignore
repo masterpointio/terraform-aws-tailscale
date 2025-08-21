@@ -16,6 +16,7 @@
 # IDE/Editor settings
 **/.idea
 **/*.iml
+.cursor/
 .vscode/
 *.orig
 *.draft
@@ -39,13 +40,13 @@ backend.tf.json
 
 # Other
 **/*.backup
-***/*.tmp
+**/*.tmp
 **/*.temp
 **/*.bak
 **/*.*swp
 **/.DS_Store
 
-.cursor/
-
-.claude/
+# AI code gen tools - we beleive engineers are responsible for the code they push no matter how it's generated
+.claude/*
+.cursor/*
 CLAUDE.md

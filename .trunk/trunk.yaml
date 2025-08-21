@@ -2,12 +2,12 @@
 # To learn more about the format of this file, see https://docs.trunk.io/reference/trunk-yaml
 version: 0.1
 cli:
-  version: 1.24.0
+  version: 1.25.0
 # Trunk provides extensibility via plugins. (https://docs.trunk.io/plugins)
 plugins:
   sources:
     - id: trunk
-      ref: v1.7.1
+      ref: v1.7.0
       uri: https://github.com/trunk-io/plugins
 # Many linters and tools depend on runtimes - configure them here. (https://docs.trunk.io/runtimes)
 runtimes:
@@ -20,17 +20,17 @@ lint:
     # Incompatible with some Terraform features: https://github.com/tenable/terrascan/issues/1331
     - terrascan
   enabled:
-    - renovate@41.46.3
-    - tofu@1.10.3
+    - renovate@41.76.0
+    - tofu@1.10.5
     - terraform@1.1.0
     - actionlint@1.7.7
-    - checkov@3.2.457
+    - checkov@3.2.461
     - git-diff-check
     - markdownlint@0.45.0
     - prettier@3.6.2
     - tflint@0.58.1
     - trivy@0.64.1
-    - trufflehog@3.90.2
+    - trufflehog@3.90.5
     - yamllint@1.37.1
   ignore:
     - linters: [tofu]
