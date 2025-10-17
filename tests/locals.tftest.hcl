@@ -58,7 +58,7 @@ run "test_local_userdata_rendered_template" {
   command = apply # because we need access to the tailscale_tailnet_key.default.key value
 
   variables {
-    primary_tag = "test-router"
+    primary_tag     = "test-router"
     additional_tags = ["test-tag1", "test-tag2"]
   }
 
@@ -74,7 +74,7 @@ run "test_local_userdata_rendered_template" {
 
   # Ensure userdata script contains transformed additional tags
   assert {
-    condition = strcontains(local.userdata, "tag:test-tag1") && strcontains(local.userdata, "tag:test-tag2")
+    condition     = strcontains(local.userdata, "tag:test-tag1") && strcontains(local.userdata, "tag:test-tag2")
     error_message = "Expected userdata to contain additional tags"
   }
 }
@@ -88,7 +88,7 @@ run "test_tailscaled_extra_flags" {
 
   # Test that tailscaled_extra_flags are rendered in userdata
   assert {
-    condition = strcontains(local.userdata, "--state=mem:") && strcontains(local.userdata, "--verbose=1")
+    condition     = strcontains(local.userdata, "--state=mem:") && strcontains(local.userdata, "--verbose=1")
     error_message = "Expected userdata to contain tailscaled extra flags"
   }
 }
