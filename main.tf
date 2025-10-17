@@ -1,5 +1,4 @@
 locals {
-
   primary_tag              = coalesce(var.primary_tag, module.this.id)
   prefixed_primary_tag     = "tag:${local.primary_tag}"
   prefixed_additional_tags = [for tag in var.additional_tags : "tag:${tag}"]
@@ -37,7 +36,7 @@ locals {
 # trivy:ignore:AVD-AWS-0090
 module "tailscale_subnet_router" {
   source  = "masterpointio/ssm-agent/aws"
-  version = "1.4.0"
+  version = "1.8.0"
 
   context = module.this.context
   tags    = module.this.tags
@@ -99,7 +98,7 @@ module "ssm_state" {
 module "ssm_policy" {
   count   = var.ssm_state_enabled ? 1 : 0
   source  = "cloudposse/iam-policy/aws"
-  version = "2.0.1"
+  version = "2.0.2"
 
   name        = var.ssm_policy_name
   description = "Additional SSM access for SSM Agent of ${module.this.id} subnet router."
