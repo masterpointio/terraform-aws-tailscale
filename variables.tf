@@ -70,6 +70,18 @@ variable "session_logging_ssm_document_name" {
   EOF
 }
 
+variable "allow_ssl_requests_only" {
+  description = "Whether or not to allow SSL requests only. If set to `true` this will create a bucket policy that `Deny` if SSL is not used in the requests using the `aws:SecureTransport` condition."
+  type        = bool
+  default     = false
+}
+
+variable "allow_encrypted_uploads_only" {
+  description = "Whether or not to allow encrypted uploads only. If set to `true` this will create a bucket policy that `Deny` if encryption header is missing in the requests."
+  type        = bool
+  default     = false
+}
+
 variable "key_pair_name" {
   default     = null
   type        = string
