@@ -53,6 +53,9 @@ module "tailscale_subnet_router" {
   session_logging_enabled           = var.session_logging_enabled
   session_logging_ssm_document_name = var.session_logging_ssm_document_name
 
+  allow_ssl_requests_only      = var.allow_ssl_requests_only
+  allow_encrypted_uploads_only = var.allow_encrypted_uploads_only
+
   ami              = var.ami
   architecture     = var.architecture
   instance_type    = var.instance_type
