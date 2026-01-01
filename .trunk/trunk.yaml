@@ -20,17 +20,17 @@ lint:
     # Incompatible with some Terraform features: https://github.com/tenable/terrascan/issues/1331
     - terrascan
   enabled:
-    - renovate@42.32.3
-    - tofu@1.10.7
+    - renovate@42.69.2
+    - tofu@1.11.2
     - terraform@1.1.0
-    - actionlint@1.7.9
-    - checkov@3.2.495
+    - actionlint@1.7.10
+    - checkov@3.2.497
     - git-diff-check
-    - markdownlint@0.46.0
+    - markdownlint@0.47.0
     - prettier@3.7.4
     - tflint@0.60.0
-    - trivy@0.68.1
-    - trufflehog@3.91.2
+    - trivy@0.68.2
+    - trufflehog@3.92.4
     - yamllint@1.37.1
   ignore:
     - linters: [tofu]
