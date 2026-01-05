@@ -157,14 +157,14 @@ The above configuration ensures that the subnet router can establish direct conn
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0 |
 | <a name="requirement_tailscale"></a> [tailscale](#requirement\_tailscale) | >= 0.13.7 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 5.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0 |
 | <a name="provider_tailscale"></a> [tailscale](#provider\_tailscale) | >= 0.13.7 |
 
 ## Modules
