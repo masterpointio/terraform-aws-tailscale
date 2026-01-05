@@ -157,23 +157,23 @@ The above configuration ensures that the subnet router can establish direct conn
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0 |
 | <a name="requirement_tailscale"></a> [tailscale](#requirement\_tailscale) | >= 0.13.7 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 5.0 |
 | <a name="provider_tailscale"></a> [tailscale](#provider\_tailscale) | >= 0.13.7 |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_ssm_policy"></a> [ssm\_policy](#module\_ssm\_policy) | cloudposse/iam-policy/aws | 2.0.1 |
+| <a name="module_ssm_policy"></a> [ssm\_policy](#module\_ssm\_policy) | cloudposse/iam-policy/aws | 2.0.2 |
 | <a name="module_ssm_state"></a> [ssm\_state](#module\_ssm\_state) | cloudposse/ssm-parameter-store/aws | 0.13.0 |
-| <a name="module_tailscale_subnet_router"></a> [tailscale\_subnet\_router](#module\_tailscale\_subnet\_router) | masterpointio/ssm-agent/aws | 1.4.0 |
+| <a name="module_tailscale_subnet_router"></a> [tailscale\_subnet\_router](#module\_tailscale\_subnet\_router) | masterpointio/ssm-agent/aws | 1.8.0 |
 | <a name="module_this"></a> [this](#module\_this) | cloudposse/label/null | 0.25.0 |
 
 ## Resources
@@ -193,6 +193,8 @@ The above configuration ensures that the subnet router can establish direct conn
 | <a name="input_additional_tag_map"></a> [additional\_tag\_map](#input\_additional\_tag\_map) | Additional key-value pairs to add to each map in `tags_as_list_of_maps`. Not added to `tags` or `id`.<br/>This is for some rare cases where resources want additional configuration of tags<br/>and therefore take a list of maps with tag key, value, and additional configuration. | `map(string)` | `{}` | no |
 | <a name="input_additional_tags"></a> [additional\_tags](#input\_additional\_tags) | Additional Tailscale tags to apply to the Tailscale Subnet Router machine in addition to `primary_tag`. These should not include the `tag:` prefix. | `list(string)` | `[]` | no |
 | <a name="input_advertise_routes"></a> [advertise\_routes](#input\_advertise\_routes) | The routes (expressed as CIDRs) to advertise as part of the Tailscale Subnet Router.<br/>  Example: ["10.0.2.0/24", "0.0.1.0/24"] | `list(string)` | `[]` | no |
+| <a name="input_allow_encrypted_uploads_only"></a> [allow\_encrypted\_uploads\_only](#input\_allow\_encrypted\_uploads\_only) | Whether or not to allow encrypted uploads only. If set to `true` this will create a bucket policy that `Deny` if encryption header is missing in the requests. | `bool` | `false` | no |
+| <a name="input_allow_ssl_requests_only"></a> [allow\_ssl\_requests\_only](#input\_allow\_ssl\_requests\_only) | Whether or not to allow SSL requests only. If set to `true` this will create a bucket policy that `Deny` if SSL is not used in the requests using the `aws:SecureTransport` condition. | `bool` | `false` | no |
 | <a name="input_ami"></a> [ami](#input\_ami) | The AMI to use for the Tailscale Subnet Router EC2 instance.<br/>  If not provided, the latest Amazon Linux 2 AMI will be used.<br/>  Note: This will update periodically as AWS releases updates to their AL2 AMI.<br/>  Pin to a specific AMI if you would like to avoid these updates. | `string` | `""` | no |
 | <a name="input_architecture"></a> [architecture](#input\_architecture) | The architecture of the AMI (e.g., x86\_64, arm64) | `string` | `"arm64"` | no |
 | <a name="input_associate_public_ip_address"></a> [associate\_public\_ip\_address](#input\_associate\_public\_ip\_address) | Associate public IP address with subnet router | `bool` | `null` | no |
@@ -294,7 +296,7 @@ We're active members of the community and are always publishing content, giving 
 
 [![Open Source Initiative][osi-image]][license-url]
 
-Copyright © 2016-2025 [Masterpoint Consulting LLC](https://masterpoint.io/)
+Copyright © 2016-2026 [Masterpoint Consulting LLC](https://masterpoint.io/)
 
 <!-- MARKDOWN LINKS & IMAGES -->
 
