@@ -1,85 +1,128 @@
-#!/bin/bash -ex
-exec > >(tee /var/log/user-data.log | logger -t user-data -s 2>/dev/console) 2>&1
+#!/bin/bash
+# Amazon Linux 2023 ONLY
+set -Eeuo pipefail
 
+# Log to file and console
+exec > >(tee /var/log/user-data.log | logger -t user-data -s 2>/dev/console) 2>&1
 echo "Starting user-data script..."
 
-echo "Enabling IP forwarding..."
-echo 'net.ipv4.ip_forward = 1' >> /etc/sysctl.conf
-echo 'net.ipv6.conf.all.forwarding = 1' >> /etc/sysctl.conf
-sysctl -p /etc/sysctl.conf
+# --------------------- Configuration variables ----------------
+PKG="dnf"
+TS_REPO_ROOT="https://pkgs.tailscale.com/stable/amazon-linux/2023"
 
+# ---- Guard: require AL2023 (robust) ----
+if [ -r /etc/os-release ]; then
+  . /etc/os-release
+  if [ "$${ID:-}" != "amzn" ] || [[ "$${VERSION_ID:-}" != 2023* ]]; then
+    echo "ERROR: This user-data requires Amazon Linux 2023. Detected ID=$${ID:-?} VERSION_ID=$${VERSION_ID:-?}" >&2
+    exit 1
+  fi
+else
+  grep -qiE 'Amazon Linux.*2023' /etc/system-release || {
+    echo "ERROR: This user-data requires Amazon Linux 2023." >&2
+    exit 1
+  }
+fi
+
+# --------------------- Networking sysctls ---------------------
+echo "Enabling IP forwarding (IPv4+IPv6)..."
+mkdir -p /etc/sysctl.d
+cat >/etc/sysctl.d/99-forwarding.conf <<'EOF'
+net.ipv4.ip_forward = 1
+net.ipv6.conf.all.forwarding = 1
+EOF
+sysctl --system
+
+# --------------------- journald tuning -----------------------
 # In systemd, Administrator drop-ins should reside in /etc/systemd/, ensuring they
 # are preserved across updates and have higher precedence than vendor defaults.
-#
 # We name our file 99-custom.conf so it loads last among any .conf files.
 # That way, it overrides any settings that come earlier.
 
-# Create the journald configs directory if it doesn't already exist
 mkdir -p /etc/systemd/journald.conf.d
-
 cat <<EOF > /etc/systemd/journald.conf.d/99-custom.conf
 [Journal]
 SystemMaxUse=${journald_system_max_use}
 MaxRetentionSec=${journald_max_retention_sec}
 EOF
+systemctl restart systemd-journald || true
 
-# Restart journald so it picks up the new configuration
-systemctl restart systemd-journald
-
-# Function to retry a command up to a maximum number of attempts
-retry_command() {
-  local cmd="$1"
-  local max_attempts="$2"
-  local attempt=1
-  local exit_code=0
-
-  while [ $attempt -le $max_attempts ]; do
-    echo "Attempt $attempt of $max_attempts: $cmd"
-    eval "$cmd"
-    exit_code=$?
-    if [ $exit_code -eq 0 ]; then
-      echo "Command succeeded: $cmd"
-      return 0
+# --------------------- Helper functions ----------------------
+wait_pkg_lock() {
+  # Wait while the RPM DB or package managers are busy (bounded wait).
+  local waited=0
+  local max_wait=300  # seconds
+  while true; do
+    busy=false
+    if command -v fuser >/dev/null 2>&1; then
+      if fuser /var/lib/rpm/.rpm.lock >/dev/null 2>&1; then busy=true; fi
     else
-      echo "Command failed with exit code $exit_code: $cmd"
-      attempt=$((attempt + 1))
-      if [ $attempt -le $max_attempts ]; then
-        echo "Retrying in 2 seconds..."
-        sleep 2
-      fi
+      # Best-effort if fuser is missing
+      if [ -e /var/lib/rpm/.rpm.lock ]; then busy=true; fi
     fi
+    if pgrep -x dnf >/dev/null 2>&1 || pgrep -x rpm >/dev/null 2>&1; then
+      busy=true
+    fi
+    if [ "$busy" = false ]; then
+      return 0
+    fi
+    if [ $waited -ge $max_wait ]; then
+      echo "WARNING: Package manager busy for $${max_wait}s; continuing."
+      return 0
+    fi
+    echo "Waiting for package manager / RPM DB lock..."
+    sleep 3
+    waited=$((waited+3))
   done
-
-  echo "Command failed after $max_attempts attempts: $cmd"
-  return $exit_code
 }
 
-# Install CloudWatch Agent
+retry() {
+  local n=0 max=6
+  until "$@"; do
+    n=$((n+1))
+    echo "Command failed (attempt $n)."
+    [[ $n -ge $max ]] && return 1
+    sleep $((2**n))  # 2,4,8,16,32 sec
+  done
+}
+
+pkg() { wait_pkg_lock; retry $PKG -y "$@"; }
+
+# --------------------- CloudWatch Agent ----------------------
 echo "Installing CloudWatch Agent..."
-retry_command "dnf install -y amazon-cloudwatch-agent" 5
-amazon-cloudwatch-agent-ctl -a start -m ec2
+pkg install amazon-cloudwatch-agent
+amazon-cloudwatch-agent-ctl -a start -m ec2 || true
 
-# Install Tailscale
+# --------------------- Tailscale repo + install --------------
+echo "Configuring Tailscale repo (AL2023)..."
+pkg install dnf-plugins-core
+wait_pkg_lock
+retry dnf config-manager --add-repo "$${TS_REPO_ROOT}/tailscale.repo"
+
 echo "Installing Tailscale..."
-retry_command "dnf install -y dnf-utils" 5
-retry_command "dnf config-manager --add-repo https://pkgs.tailscale.com/stable/amazon-linux/2/tailscale.repo" 5
-retry_command "dnf install -y tailscale" 5
+pkg makecache || true
+pkg install tailscale
 
+# --------------------- Optional extra tailscaled FLAGS -------
 %{ if tailscaled_extra_flags_enabled == true }
-echo "Exporting FLAGS to /etc/default/tailscaled..."
-sed -i "s|^FLAGS=.*|FLAGS=\"${tailscaled_extra_flags}\"|" /etc/default/tailscaled
+echo "Writing FLAGS to /etc/sysconfig/tailscaled..."
+install -d -m 0755 /etc/sysconfig
+echo "FLAGS=\"${tailscaled_extra_flags}\"" > /etc/sysconfig/tailscaled
 %{ endif }
 
-# Setup Tailscale
-echo "Enabling and starting tailscaled service..."
+# --------------------- Enable + start tailscaled -------------
+echo "Enabling and starting tailscaled..."
 systemctl enable --now tailscaled
 
-echo "Waiting for tailscaled to initialize..."
-sleep 5
+echo "Waiting for tailscaled to be ready..."
+for i in {1..20}; do
+  if tailscale status >/dev/null 2>&1; then break; fi
+  sleep 2
+done
 
-# Start tailscale
-# We pass --advertise-tags below even though the authkey being created with those tags should result
-# in the same effect. This is to be more explicit because tailscale tags are a complicated topic.
+# --------------------- tailscale up (hide secrets) -----------
+set +x
+echo "Running 'tailscale up'..."
 tailscale up \
   %{ if ssh_enabled == true }--ssh%{ endif } \
   %{ if exit_node_enabled == true }--advertise-exit-node%{ endif } \
@@ -87,6 +130,9 @@ tailscale up \
   --advertise-routes=${routes} \
   --advertise-tags=${tags} \
   --hostname=${hostname} \
-  --authkey=${authkey}
+  --authkey=${authkey} \
+  || { echo "WARNING: 'tailscale up' failed; continuing."; }
+set -x || true
 
 echo "Tailscale setup completed."
+echo "User-data script finished successfully."
