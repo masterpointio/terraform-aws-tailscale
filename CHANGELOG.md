@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/v1.11.0...v2.0.0) (2026-01-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* safe rpm lock handling + AWS provider bump ([#82](https://github.com/masterpointio/terraform-aws-tailscale/issues/82))
+
+### Bug Fixes
+
+* safe rpm lock handling + AWS provider bump ([#82](https://github.com/masterpointio/terraform-aws-tailscale/issues/82)) ([ce80388](https://github.com/masterpointio/terraform-aws-tailscale/commit/ce8038849d00d97e2da270b6153aa979a777299d))
+
 ## [1.9.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/v1.8.0...v1.9.0) (2025-08-21)
 
 
