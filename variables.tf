@@ -244,6 +244,15 @@ variable "tailscale_up_extra_flags" {
   EOT
 }
 
+variable "tailscale_set_extra_flags" {
+  default     = []
+  type        = list(string)
+  description = <<-EOT
+  Extra flags to pass to `tailscale set` after `tailscale up` for persistent preference changes that don't require reauthentication.
+  See more in the [docs](https://tailscale.com/docs/reference/tailscale-cli#set).
+  EOT
+}
+
 variable "ssm_state_enabled" {
   default     = false
   type        = bool
