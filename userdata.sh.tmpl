@@ -134,5 +134,12 @@ tailscale up \
   || { echo "WARNING: 'tailscale up' failed; continuing."; }
 set -x || true
 
+# --------------------- tailscale set (persistent prefs) -----
+%{ if tailscale_set_extra_flags_enabled == true }
+echo "Running 'tailscale set'..."
+tailscale set ${tailscale_set_extra_flags} \
+  || { echo "WARNING: 'tailscale set' failed; continuing."; }
+%{ endif }
+
 echo "Tailscale setup completed."
 echo "User-data script finished successfully."

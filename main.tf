@@ -11,7 +11,8 @@ locals {
   tailscaled_extra_flags         = join(" ", compact(concat(var.tailscaled_extra_flags, [local.ssm_state_flag])))
   tailscaled_extra_flags_enabled = length(local.tailscaled_extra_flags) > 0
 
-  tailscale_up_extra_flags_enabled = length(var.tailscale_up_extra_flags) > 0
+  tailscale_up_extra_flags_enabled  = length(var.tailscale_up_extra_flags) > 0
+  tailscale_set_extra_flags_enabled = length(var.tailscale_set_extra_flags) > 0
 
   userdata = templatefile("${path.module}/userdata.sh.tmpl", {
     authkey           = tailscale_tailnet_key.default.key
@@ -21,10 +22,12 @@ locals {
     ssh_enabled       = var.ssh_enabled
     tags              = join(",", local.tailscale_tags)
 
-    tailscaled_extra_flags_enabled   = local.tailscaled_extra_flags_enabled
-    tailscaled_extra_flags           = local.tailscaled_extra_flags
-    tailscale_up_extra_flags_enabled = local.tailscale_up_extra_flags_enabled
-    tailscale_up_extra_flags         = join(" ", var.tailscale_up_extra_flags)
+    tailscaled_extra_flags_enabled    = local.tailscaled_extra_flags_enabled
+    tailscaled_extra_flags            = local.tailscaled_extra_flags
+    tailscale_up_extra_flags_enabled  = local.tailscale_up_extra_flags_enabled
+    tailscale_up_extra_flags          = join(" ", var.tailscale_up_extra_flags)
+    tailscale_set_extra_flags_enabled = local.tailscale_set_extra_flags_enabled
+    tailscale_set_extra_flags         = join(" ", var.tailscale_set_extra_flags)
 
     journald_system_max_use    = var.journald_system_max_use
     journald_max_retention_sec = var.journald_max_retention_sec
