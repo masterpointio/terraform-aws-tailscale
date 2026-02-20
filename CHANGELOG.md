@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/v2.0.0...v2.1.0) (2026-02-20)
+
+
+### Features
+
+* support Tailscale set flags ([#87](https://github.com/masterpointio/terraform-aws-tailscale/issues/87)) ([45ba2e7](https://github.com/masterpointio/terraform-aws-tailscale/commit/45ba2e79d32f5081b76b620673a8be74dbf7012a))
+
 ## [2.0.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/v1.11.0...v2.0.0) (2026-01-06)
 
 
