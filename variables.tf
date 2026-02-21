@@ -205,10 +205,10 @@ variable "advertise_routes" {
 variable "authkey_config" {
   default = {
     "tailscale_tailnet_key" = {
-      "ephemeral": false,
-      "expiry": 7776000,
-      "preauthorized": true,
-      "reusable" = true,
+      "ephemeral"    = false,
+      "expiry"       = 7776000,
+      "preauthorized"= true,
+      "reusable"     = true,
     }
   }
 
