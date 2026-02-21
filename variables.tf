@@ -241,18 +241,10 @@ variable "authkey_config" {
 
   validation {
     condition = (
-      var.authkey_config.tailscale_oauth_client != null || 
-      var.authkey_config.tailscale_tailnet_key != null
-    )
-    error_message = "At least one of 'tailscale_oauth_client' or 'tailscale_tailnet_key' must be defined in authkey_config."
-  }
-
-  validation {
-    condition = (
       var.authkey_config.tailscale_oauth_client == null && var.authkey_config.tailscale_tailnet_key != null || 
       var.authkey_config.tailscale_oauth_client != null && var.authkey_config.tailscale_tailnet_key == null
     )
-    error_message = "Only one of 'tailscale_oauth_client' or 'tailscale_tailnet_key' must be defined in authkey_config."
+    error_message = "Exactly one of 'tailscale_oauth_client' or 'tailscale_tailnet_key' must be defined in authkey_config."
   }
 
   validation {
