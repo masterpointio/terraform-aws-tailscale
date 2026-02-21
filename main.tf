@@ -16,8 +16,11 @@ locals {
 
   userdata = templatefile("${path.module}/userdata.sh.tmpl", {
     authkey           = try(
-      one(tailscale_oauth_client.default[*].key), 
-      one(tailscale_tailnet_key.default[*].key)
+      coalesce(
+        one(tailscale_oauth_client.default[*].key),
+        one(tailscale_tailnet_key.default[*].key),
+      ),
+      null
     )
     exit_node_enabled = var.exit_node_enabled
     hostname          = module.this.id
