@@ -15,7 +15,10 @@ locals {
   tailscale_set_extra_flags_enabled = length(var.tailscale_set_extra_flags) > 0
 
   userdata = templatefile("${path.module}/userdata.sh.tmpl", {
-    authkey           = tailscale_tailnet_key.default.key
+    authkey           = try(
+      one(tailscale_oauth_client.default[*].key), 
+      one(tailscale_tailnet_key.default[*].key)
+    )
     exit_node_enabled = var.exit_node_enabled
     hostname          = module.this.id
     routes            = join(",", var.advertise_routes)
@@ -72,14 +75,23 @@ module "tailscale_subnet_router" {
   user_data = base64encode(length(var.user_data) > 0 ? var.user_data : local.userdata)
 }
 
-resource "tailscale_tailnet_key" "default" {
-  reusable      = var.reusable
-  ephemeral     = var.ephemeral
-  preauthorized = var.preauthorized
-  expiry        = var.expiry
+resource "tailscale_oauth_client" "default" {
+  count = var.authkey_config.tailscale_oauth_client != null ? 1 : 0
 
-  # A device is automatically tagged when it is authenticated with this key.
-  tags = local.tailscale_tags
+  description = module.this.id
+  scopes      = var.authkey_config.tailscale_oauth_client.scopes
+  tags        = local.tailscale_tags
+}
+
+resource "tailscale_tailnet_key" "default" {
+  count = var.authkey_config.tailscale_tailnet_key != null ? 1 : 0
+
+  description   = module.this.id
+  ephemeral     = var.authkey_config.tailscale_tailnet_key.ephemeral
+  expiry        = var.authkey_config.tailscale_tailnet_key.expiry
+  preauthorized = var.authkey_config.tailscale_tailnet_key.preauthorized
+  reusable      = var.authkey_config.tailscale_tailnet_key.reusable
+  tags          = local.tailscale_tags
 }
 
 module "ssm_state" {
