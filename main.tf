@@ -15,12 +15,9 @@ locals {
   tailscale_set_extra_flags_enabled = length(var.tailscale_set_extra_flags) > 0
 
   userdata = templatefile("${path.module}/userdata.sh.tmpl", {
-    authkey           = try(
-      coalesce(
-        one(tailscale_oauth_client.default[*].key),
-        one(tailscale_tailnet_key.default[*].key),
-      ),
-      null
+    authkey           = coalesce(
+      one(tailscale_oauth_client.default[*].key),
+      one(tailscale_tailnet_key.default[*].key),
     )
     exit_node_enabled = var.exit_node_enabled
     hostname          = module.this.id
