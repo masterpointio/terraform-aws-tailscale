@@ -78,7 +78,7 @@ module "tailscale_subnet_router" {
 resource "tailscale_oauth_client" "default" {
   count = var.authkey_config.tailscale_oauth_client != null ? 1 : 0
 
-  description = module.this.id
+  description = var.authkey_config.tailscale_oauth_client.description
   scopes      = var.authkey_config.tailscale_oauth_client.scopes
   tags        = local.tailscale_tags
 }
@@ -86,7 +86,7 @@ resource "tailscale_oauth_client" "default" {
 resource "tailscale_tailnet_key" "default" {
   count = var.authkey_config.tailscale_tailnet_key != null ? 1 : 0
 
-  description   = module.this.id
+  description   = var.authkey_config.tailscale_tailnet_key.description
   ephemeral     = var.authkey_config.tailscale_tailnet_key.ephemeral
   expiry        = var.authkey_config.tailscale_tailnet_key.expiry
   preauthorized = var.authkey_config.tailscale_tailnet_key.preauthorized

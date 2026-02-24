@@ -217,7 +217,7 @@ variable "authkey_config" {
 
   One of `tailscale_oauth_client` or `tailscale_tailnet_key` must be set.
 
-  For both options, the `description` is taken from `module.this.id` and the `tags` from what is passed to the `tailscale up command` via `--advertise-tags=<tags>` flag.
+  For both options, `tags` are configured by the module and are the same that are passed to `tailscale up` command via `--advertise-tags=<tags>` flag.
 
   Minimal `scopes` required for `tailscale_oauth_client` are `["auth_keys", "devices:core", "devices:routes", "dns"]`.
 
@@ -229,9 +229,11 @@ variable "authkey_config" {
 
   type = object({
     tailscale_oauth_client = optional(object({
+      description = string
       scopes = list(string)
     }))
     tailscale_tailnet_key = optional(object({
+      description   = string
       ephemeral     = bool
       expiry        = number
       preauthorized = bool
