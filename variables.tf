@@ -202,28 +202,60 @@ variable "advertise_routes" {
   }
 }
 
-variable "expiry" {
-  default     = 7776000
-  type        = number
-  description = "The expiry of the auth key in seconds."
-}
+variable "authkey_config" {
+  default = {
+    "tailscale_tailnet_key" = {
+      "ephemeral"     = false,
+      "expiry"        = 7776000,
+      "preauthorized" = true,
+      "reusable"      = true,
+    }
+  }
 
-variable "preauthorized" {
-  default     = true
-  type        = bool
-  description = "Determines whether or not the machines authenticated by the key will be authorized for the tailnet by default."
-}
+  description = <<-EOT
+  Configuration for the auth key used in `tailscale up` command.
 
-variable "ephemeral" {
-  default     = false
-  type        = bool
-  description = "Indicates if the key is ephemeral."
-}
+  One of `tailscale_oauth_client` or `tailscale_tailnet_key` must be set.
 
-variable "reusable" {
-  default     = true
-  type        = bool
-  description = "Indicates if the key is reusable or single-use."
+  For both options, `tags` are configured by the module and are the same that are passed to `tailscale up` command via `--advertise-tags=<tags>` flag.
+
+  Minimal `scopes` required for `tailscale_oauth_client` are `["auth_keys", "devices:core", "devices:routes", "dns"]`.
+
+  For additional information, please visit:
+  - [tailscale up command](https://tailscale.com/docs/reference/tailscale-cli/up)
+  - [Terraform tailscale_oauth_client](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/oauth_client)
+  - [Terraform tailscale_tailnet_key](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/tailnet_key)
+  EOT
+
+  type = object({
+    tailscale_oauth_client = optional(object({
+      description = string
+      scopes = list(string)
+    }))
+    tailscale_tailnet_key = optional(object({
+      description   = string
+      ephemeral     = bool
+      expiry        = number
+      preauthorized = bool
+      reusable      = bool
+    }))
+  })
+
+  validation {
+    condition = (
+      var.authkey_config.tailscale_oauth_client == null && var.authkey_config.tailscale_tailnet_key != null || 
+      var.authkey_config.tailscale_oauth_client != null && var.authkey_config.tailscale_tailnet_key == null
+    )
+    error_message = "Exactly one of 'tailscale_oauth_client' or 'tailscale_tailnet_key' must be defined in authkey_config."
+  }
+
+  validation {
+    condition = var.authkey_config.tailscale_oauth_client == null ? true : setintersection(
+      var.authkey_config.tailscale_oauth_client.scopes,
+      ["auth_keys", "devices:core", "devices:routes", "dns"],
+    ) == toset(["auth_keys", "devices:core", "devices:routes", "dns"])
+    error_message = "The 'tailscale_oauth_client.scopes' must include at least: auth_keys, devices:core, devices:routes and dns."
+  }
 }
 
 variable "tailscaled_extra_flags" {
