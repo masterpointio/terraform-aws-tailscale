@@ -52,8 +52,6 @@ module "tailscale" {
   vpc_id           = module.vpc.vpc_id
   subnet_ids       = module.subnets.private_subnet_ids
   advertise_routes = [module.vpc.vpc_cidr_block]
-
-  ephemeral = true
 }
 ```
 
