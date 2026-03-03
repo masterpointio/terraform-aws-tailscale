@@ -21,7 +21,7 @@ jobs:
       matrix:
         tf: [tofu, terraform]
     steps:
-      - uses: masterpointio/github-action-tf-test@c3b619f3bca9e4f482b9e0fb3166ab3f02d9d54c # v1.0.0
+      - uses: masterpointio/github-action-tf-test@c1e41998f67925ac3f34e0bbcfcaa4a44d1f0cd9 # v1.0.1
         with:
           tf_type: ${{ matrix.tf }}
           aws_role_arn: ${{ vars.TF_TEST_AWS_ROLE_ARN }}
