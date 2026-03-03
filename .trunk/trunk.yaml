@@ -29,7 +29,7 @@ lint:
     - markdownlint@0.47.0
     - prettier@3.8.1
     - tflint@0.61.0
-    - trivy@0.69.0
+    - trivy@0.69.2
     - trufflehog@3.93.6
     - yamllint@1.38.0
   ignore:
