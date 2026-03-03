@@ -205,6 +205,7 @@ variable "advertise_routes" {
 variable "authkey_config" {
   default = {
     "tailscale_tailnet_key" = {
+      "description"   = "Subnet Router",
       "ephemeral"     = false,
       "expiry"        = 7776000,
       "preauthorized" = true,
