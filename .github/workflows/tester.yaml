@@ -1,0 +1,21 @@
+name: Test CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Install Aqua
+        uses: aquaproj/aqua-installer@v4.0.4
+        with:
+          aqua_version: v2.48.1
