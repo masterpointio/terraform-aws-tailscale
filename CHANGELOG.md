@@ -1,5 +1,22 @@
 # Changelog
 
+## [3.0.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/v2.1.0...v3.0.0) (2026-04-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* support oauth client for the authkey ([#89](https://github.com/masterpointio/terraform-aws-tailscale/issues/89))
+
+### Features
+
+* support oauth client for the authkey ([#89](https://github.com/masterpointio/terraform-aws-tailscale/issues/89)) ([8c015d5](https://github.com/masterpointio/terraform-aws-tailscale/commit/8c015d59a89e6d59d16b01a25ceb13bd6138641a))
+
+
+### Bug Fixes
+
+* Fix default variable ([#92](https://github.com/masterpointio/terraform-aws-tailscale/issues/92)) ([c84ae5e](https://github.com/masterpointio/terraform-aws-tailscale/commit/c84ae5e1f269c39d766b640bdcda8f6d7f6c90a3))
+* pin GitHub Actions to commit SHAs (INT-326) ([#98](https://github.com/masterpointio/terraform-aws-tailscale/issues/98)) ([70fc124](https://github.com/masterpointio/terraform-aws-tailscale/commit/70fc1245bc81a0c7bc68f31df30ebab62fc0d0b1))
+
 ## [2.1.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/v2.0.0...v2.1.0) (2026-02-20)
 
 
