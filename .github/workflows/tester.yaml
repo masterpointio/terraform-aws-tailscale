@@ -1,9 +1,7 @@
 name: Test CI/CD
 
 on:
-  push:
-    branches:
-      - main
+  pull_request_target:
 
 permissions:
   id-token: write
