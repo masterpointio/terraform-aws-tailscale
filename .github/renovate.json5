@@ -8,9 +8,6 @@
     "terraform",
     "github-actions"
   ],
-  "github-actions": {
-    "pinDigests": true
-  },
   "terraform": {
     "ignorePaths": [
       "**/context.tf" // Mixin file https://github.com/cloudposse/terraform-null-label/blob/main/exports/context.tf
