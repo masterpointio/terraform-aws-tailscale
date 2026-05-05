@@ -3,6 +3,7 @@
     "config:best-practices",
     "github>aquaproj/aqua-renovate-config#2.7.5"
   ],
+  "minimumReleaseAge": "3 days",
   "enabledManagers": [
     "terraform",
     "github-actions"
