@@ -7,7 +7,7 @@ cli:
 plugins:
   sources:
     - id: trunk
-      ref: v1.7.5
+      ref: v1.10.0
       uri: https://github.com/trunk-io/plugins
 # Many linters and tools depend on runtimes - configure them here. (https://docs.trunk.io/runtimes)
 runtimes:
@@ -32,6 +32,13 @@ lint:
     - trivy@0.69.2
     - trufflehog@3.93.6
     - yamllint@1.38.0
+    - zizmor@1.24.1
+  definitions:
+    - name: zizmor
+      commands:
+        - name: lint
+          # Set to pedantic so that zizmor will run it's stale-action-refs audit rule
+          run: zizmor --format=sarif --persona=pedantic ${target}
   ignore:
     - linters: [tofu]
       paths:

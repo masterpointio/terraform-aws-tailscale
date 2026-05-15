@@ -6,22 +6,16 @@ on:
     - cron: 0 8 1 * *
   workflow_dispatch: {}
 
-permissions: read-all
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
 
 jobs:
   trunk-upgrade:
-    runs-on: ubuntu-latest
-    permissions:
-      # For trunk to create PRs
-      contents: write
-      pull-requests: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Run Trunk Upgrade
-        uses: masterpointio/github-action-trunk-upgrade@a79fd65d524d92031fe167daee411d2f25d4a999 # v0.1.0
-        with:
-          app-id: ${{ secrets.MP_BOT_APP_ID }}
-          app-private-key: ${{ secrets.MP_BOT_APP_PRIVATE_KEY }}
-          reviewers: "@masterpointio/masterpoint-open-source"
+    uses: masterpointio/actions/.github/workflows/trunk-upgrade.yaml@dc403c87226db5bac0f18d0dcdd99c305d864472 #v0.1.0
+    secrets:
+      MP_BOT_APP_ID: ${{ secrets.MP_BOT_APP_ID }}
+      MP_BOT_APP_PRIVATE_KEY: ${{ secrets.MP_BOT_APP_PRIVATE_KEY }}
+      MASTERPOINT_TEAM_PAT: ${{ secrets.MASTERPOINT_TEAM_PAT }}
