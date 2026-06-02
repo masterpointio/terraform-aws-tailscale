@@ -6,9 +6,21 @@ locals {
   ssm_state_param_name = var.ssm_state_enabled ? "/tailscale/${module.this.id}/state" : null
   ssm_state_flag       = var.ssm_state_enabled ? "--state=${module.ssm_state[0].arn_map[local.ssm_state_param_name]}" : ""
 
+  # When --state= points at a portable store (arn:..., kube:..., mem:),
+  # tailscaled refuses to use the local filesystem as its "var root"
+  # unless --statedir is also given. Without it, the in-process Tailscale
+  # SSH server can't persist host keys and silently stays disabled
+  # ("warning: unable to get SSH host keys, SSH will appear as disabled
+  # for this node: no var root for ssh keys" in tailscaled's journal),
+  # along with taildrop, TKA (network-lock), and the per-profile cache.
+  # The systemd unit shipped by Tailscale's rpm/deb already sets
+  # StateDirectory=tailscale (i.e. /var/lib/tailscale), so pinning
+  # --statedir there keeps state on disk where the package expects it.
+  ssm_statedir_flag = var.ssm_state_enabled ? "--statedir=/var/lib/tailscale" : ""
+
   tailscale_tags = concat([local.prefixed_primary_tag], local.prefixed_additional_tags)
 
-  tailscaled_extra_flags         = join(" ", compact(concat(var.tailscaled_extra_flags, [local.ssm_state_flag])))
+  tailscaled_extra_flags         = join(" ", compact(concat(var.tailscaled_extra_flags, [local.ssm_state_flag, local.ssm_statedir_flag])))
   tailscaled_extra_flags_enabled = length(local.tailscaled_extra_flags) > 0
 
   tailscale_up_extra_flags_enabled  = length(var.tailscale_up_extra_flags) > 0
