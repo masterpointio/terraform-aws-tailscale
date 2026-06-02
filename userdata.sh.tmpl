@@ -107,7 +107,10 @@ pkg install tailscale
 %{ if tailscaled_extra_flags_enabled == true }
 echo "Writing FLAGS to /etc/default/tailscaled..."
 install -d -m 0755 /etc/default
-echo "FLAGS=\"${tailscaled_extra_flags}\"" > /etc/default/tailscaled
+cat > /etc/default/tailscaled <<'TSEOF'
+PORT="41641"
+TSEOF
+echo "FLAGS=\"${tailscaled_extra_flags}\"" >> /etc/default/tailscaled
 %{ endif }
 
 # --------------------- Enable + start tailscaled -------------
