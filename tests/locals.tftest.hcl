@@ -91,4 +91,63 @@ run "test_tailscaled_extra_flags" {
     condition     = strcontains(local.userdata, "--state=mem:") && strcontains(local.userdata, "--verbose=1")
     error_message = "Expected userdata to contain tailscaled extra flags"
   }
+
+  # Flags should be written to the Debian/AL2023-style path, not the legacy sysconfig path.
+  assert {
+    condition     = strcontains(local.userdata, "/etc/default/tailscaled") && !strcontains(local.userdata, "/etc/sysconfig/tailscaled")
+    error_message = "Expected userdata to target /etc/default/tailscaled and not /etc/sysconfig/tailscaled"
+  }
+
+  # The script must update FLAGS in-place (sed) rather than truncating the file with `>`.
+  # This preserves the package-provided defaults (PORT, comments, etc.).
+  assert {
+    condition     = strcontains(local.userdata, "sed -i") && strcontains(local.userdata, "/etc/default/tailscaled")
+    error_message = "Expected userdata to update FLAGS in place via sed to preserve existing /etc/default/tailscaled content"
+  }
+
+  assert {
+    condition     = length(regexall("[^>]> /etc/default/tailscaled", local.userdata)) == 0
+    error_message = "Expected userdata not to truncate /etc/default/tailscaled with a single `>` redirect"
+  }
+
+  # We must not hardcode PORT; the package default applies, and users may override via --port=... in tailscaled_extra_flags.
+  assert {
+    condition     = !strcontains(local.userdata, "PORT=\"41641\"")
+    error_message = "Expected userdata not to hardcode PORT=\"41641\" in /etc/default/tailscaled"
+  }
+}
+
+run "test_tailscaled_extra_flags_user_supplied_port" {
+  command = apply
+
+  variables {
+    tailscaled_extra_flags = ["--port=12345"]
+  }
+
+  # The user-supplied --port flag must reach the FLAGS line.
+  assert {
+    condition     = strcontains(local.userdata, "--port=12345")
+    error_message = "Expected userdata to contain user-supplied --port flag"
+  }
+
+  # And we must not write a competing PORT=... line ourselves.
+  assert {
+    condition     = !strcontains(local.userdata, "PORT=\"41641\"")
+    error_message = "Expected userdata not to write a hardcoded PORT line that would conflict with user --port flag"
+  }
+}
+
+run "test_tailscaled_extra_flags_disabled_by_default" {
+  command = apply
+
+  # With no extra flags and ssm_state disabled, the whole FLAGS block should be skipped
+  # so that /etc/default/tailscaled is left entirely untouched.
+  variables {
+    ssm_state_enabled = false
+  }
+
+  assert {
+    condition     = !strcontains(local.userdata, "/etc/default/tailscaled")
+    error_message = "Expected userdata not to touch /etc/default/tailscaled when no extra flags are configured"
+  }
 }
