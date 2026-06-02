@@ -98,11 +98,19 @@ run "test_tailscaled_extra_flags" {
     error_message = "Expected userdata to target /etc/default/tailscaled and not /etc/sysconfig/tailscaled"
   }
 
-  # The script must update FLAGS in-place (sed) rather than truncating the file with `>`.
-  # This preserves the package-provided defaults (PORT, comments, etc.).
+  # The script must update FLAGS without truncating the existing file: write to a
+  # temp file first, then atomically move it into place. This preserves the
+  # package-provided defaults (PORT, comments, etc.).
   assert {
-    condition     = strcontains(local.userdata, "sed -i") && strcontains(local.userdata, "/etc/default/tailscaled")
-    error_message = "Expected userdata to update FLAGS in place via sed to preserve existing /etc/default/tailscaled content"
+    condition     = strcontains(local.userdata, "mktemp /etc/default/tailscaled") && strcontains(local.userdata, "mv -f \"$tmpfile\" /etc/default/tailscaled")
+    error_message = "Expected userdata to write FLAGS via a temp file and atomic mv into /etc/default/tailscaled"
+  }
+
+  # The new FLAGS line must be emitted via a quoted heredoc so the shell does
+  # not re-interpret special characters in the user-supplied flag value.
+  assert {
+    condition     = strcontains(local.userdata, "<<'TS_FLAGS_EOF'")
+    error_message = "Expected userdata to emit FLAGS via a quoted heredoc to avoid shell re-interpretation"
   }
 
   assert {
@@ -114,6 +122,22 @@ run "test_tailscaled_extra_flags" {
   assert {
     condition     = !strcontains(local.userdata, "PORT=\"41641\"")
     error_message = "Expected userdata not to hardcode PORT=\"41641\" in /etc/default/tailscaled"
+  }
+}
+
+run "test_tailscaled_extra_flags_preserves_shell_metacharacters" {
+  command = apply
+
+  # Defense-in-depth: even if a flag value contains characters that are special
+  # to the shell (`|`, `$`, backtick, `\`) or to common substitution tools like
+  # sed, the rendered userdata must contain the value verbatim inside the FLAGS line.
+  variables {
+    tailscaled_extra_flags = ["--weird=a|b$c`d\\e"]
+  }
+
+  assert {
+    condition     = strcontains(local.userdata, "FLAGS=\"--weird=a|b$c`d\\e\"")
+    error_message = "Expected FLAGS line to contain the user-supplied flag value verbatim, including shell metacharacters"
   }
 }
 
