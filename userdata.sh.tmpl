@@ -105,12 +105,15 @@ pkg install tailscale
 
 # --------------------- Optional extra tailscaled FLAGS -------
 %{ if tailscaled_extra_flags_enabled == true }
-echo "Writing FLAGS to /etc/default/tailscaled..."
+echo "Updating FLAGS in /etc/default/tailscaled..."
 install -d -m 0755 /etc/default
-cat > /etc/default/tailscaled <<'TSEOF'
-PORT="41641"
-TSEOF
-echo "FLAGS=\"${tailscaled_extra_flags}\"" >> /etc/default/tailscaled
+touch /etc/default/tailscaled
+if grep -qE '^[[:space:]]*FLAGS=' /etc/default/tailscaled; then
+  # Replace the existing FLAGS= line, preserving the rest of the file.
+  sed -i "s|^[[:space:]]*FLAGS=.*|FLAGS=\"${tailscaled_extra_flags}\"|" /etc/default/tailscaled
+else
+  echo "FLAGS=\"${tailscaled_extra_flags}\"" >> /etc/default/tailscaled
+fi
 %{ endif }
 
 # --------------------- Enable + start tailscaled -------------
