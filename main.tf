@@ -20,14 +20,22 @@ locals {
 
   tailscale_tags = concat([local.prefixed_primary_tag], local.prefixed_additional_tags)
 
-  tailscaled_extra_flags         = join(" ", compact(concat(var.tailscaled_extra_flags, [local.ssm_state_flag, local.ssm_statedir_flag])))
+  # Order matters: tailscaled uses Go's standard `flag` package, which is
+  # last-wins for repeated flags. We put the module-injected flags FIRST and
+  # caller-supplied `var.tailscaled_extra_flags` LAST so that callers can
+  # override module defaults if they need to. The precondition on
+  # `aws_iam_role_policy_attachment.default` below guards the one case where
+  # silent override would break the module's contract (see the comment on
+  # `local.ssm_statedir_flag` above): callers cannot override `--state` or
+  # `--statedir` while `var.ssm_state_enabled = true`.
+  tailscaled_extra_flags         = join(" ", compact(concat([local.ssm_state_flag, local.ssm_statedir_flag], var.tailscaled_extra_flags)))
   tailscaled_extra_flags_enabled = length(local.tailscaled_extra_flags) > 0
 
   tailscale_up_extra_flags_enabled  = length(var.tailscale_up_extra_flags) > 0
   tailscale_set_extra_flags_enabled = length(var.tailscale_set_extra_flags) > 0
 
   userdata = templatefile("${path.module}/userdata.sh.tmpl", {
-    authkey           = coalesce(
+    authkey = coalesce(
       one(tailscale_oauth_client.default[*].key),
       one(tailscale_tailnet_key.default[*].key),
     )
@@ -154,6 +162,23 @@ resource "aws_iam_role_policy_attachment" "default" {
   count      = var.ssm_state_enabled ? 1 : 0
   role       = module.tailscale_subnet_router.role_id
   policy_arn = module.ssm_policy[0].policy_arn
+
+  lifecycle {
+    # When `ssm_state_enabled = true`, the module must own `--state` (it points
+    # at the SSM parameter it provisions) and `--statedir` (required so SSH
+    # host keys, taildrop, TKA, and the per-profile cache keep working when
+    # `--state` is a portable store -- see the comment on `local.ssm_statedir_flag`).
+    # Because tailscaled flag parsing is last-wins and caller flags are now
+    # appended after module flags, a caller-supplied `--state`/`--statedir`
+    # would silently break the SSM-state contract. Fail loudly at plan time
+    # instead of letting the instance come up misconfigured.
+    precondition {
+      condition = !anytrue([
+        for f in var.tailscaled_extra_flags : can(regex("^--(state|statedir)(=|$)", f))
+      ])
+      error_message = "When `ssm_state_enabled = true`, `var.tailscaled_extra_flags` must not contain `--state` or `--statedir`; these are managed by the module."
+    }
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "cw_agent" {
