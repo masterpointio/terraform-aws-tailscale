@@ -4,7 +4,7 @@ name: Lint
 # require repo secrets to run some of the defined checks,
 # and we protect against malicious actors by requiring approval
 # for all external contributors before workflows will run.
-on: pull_request_target # zizmor: ignore[dangerous-triggers]
+on: pull_request_target
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
