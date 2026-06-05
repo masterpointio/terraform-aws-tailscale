@@ -4,7 +4,7 @@ name: Lint
 # require repo secrets to run some of the defined checks,
 # and we protect against malicious actors by requiring approval
 # for all external contributors before workflows will run.
-on: pull_request_target
+on: pull_request_target # zizmor: ignore[dangerous-triggers]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
@@ -14,6 +14,9 @@ permissions: {}
 
 jobs:
   lint:
-    uses: masterpointio/actions/.github/workflows/lint.yaml@dc403c87226db5bac0f18d0dcdd99c305d864472 #v0.1.0
-    secrets:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    uses: masterpointio/actions/.github/workflows/lint.yaml@7dad35e85d864ca5dda0971dfd3c940cc67ed380 #v0.3.0
+    permissions:
+      actions: read # for trunk-action
+      checks: write # for trunk-action
+      contents: read # for trunk-action + checkout
+      pull-requests: read # for action-semantic-pull-request

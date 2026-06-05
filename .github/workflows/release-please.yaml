@@ -13,9 +13,13 @@ permissions: {}
 
 jobs:
   release-please:
-    uses: masterpointio/actions/.github/workflows/release-please.yaml@dc403c87226db5bac0f18d0dcdd99c305d864472 #v0.1.0
+    uses: masterpointio/actions/.github/workflows/release-please.yaml@7dad35e85d864ca5dda0971dfd3c940cc67ed380 #v0.3.0
     with:
       release-type: terraform-module
     secrets:
       MP_BOT_APP_ID: ${{ secrets.MP_BOT_APP_ID }}
       MP_BOT_APP_PRIVATE_KEY: ${{ secrets.MP_BOT_APP_PRIVATE_KEY }}
+    permissions:
+      contents: write # needed by release-please-action
+      pull-requests: write # needed by release-please-action
+      issues: write # needed by release-please-action
