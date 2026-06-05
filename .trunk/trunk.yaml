@@ -7,7 +7,7 @@ cli:
 plugins:
   sources:
     - id: trunk
-      ref: v1.7.5
+      ref: v1.10.0
       uri: https://github.com/trunk-io/plugins
 # Many linters and tools depend on runtimes - configure them here. (https://docs.trunk.io/runtimes)
 runtimes:
@@ -32,6 +32,19 @@ lint:
     - trivy@0.69.2
     - trufflehog@3.93.6
     - yamllint@1.38.0
+    - zizmor@1.25.2
+  definitions:
+    - name: zizmor
+      environment:
+        # Optional token here so that it's not needed locally, but can be used
+        # when trunk is called from our lint workflow in GHA
+        - name: ZIZMOR_GITHUB_TOKEN
+          value: ${env.GITHUB_TOKEN}
+          optional: true
+      commands:
+        # Set to pedantic so that zizmor will run its stale-action-refs audit rule
+        - name: lint
+          run: zizmor --format=sarif --persona=pedantic ${target}
   ignore:
     - linters: [tofu]
       paths:
