@@ -25,6 +25,27 @@ locals {
 
   routing_iam_enabled = local.source_dest_check_disabled || local.routes_enabled
 
+  # Routed-through (VPC -> tailnet) packets are evaluated against the router's security group at the
+  # ENI, so the forwarded sources need an ingress rule or AWS drops them. Default to the VPC CIDR for
+  # out-of-the-box behavior; narrow with var.route_source_cidrs.
+  route_source_cidrs = local.routes_enabled ? (
+    length(var.route_source_cidrs) > 0 ? var.route_source_cidrs : compact([one(data.aws_vpc.this[*].cidr_block)])
+  ) : []
+
+  routing_security_group_rules = length(local.route_source_cidrs) > 0 ? {
+    tailscale-vpc-forward = {
+      type             = "ingress"
+      from_port        = 0
+      to_port          = 0
+      protocol         = "-1"
+      description      = "Allow VPC sources to be forwarded into the tailnet (VPC to tailnet routing)"
+      cidr_blocks      = local.route_source_cidrs
+      ipv6_cidr_blocks = null
+      prefix_list_ids  = null
+      self             = null
+    }
+  } : {}
+
   routing_statements = concat(
     local.source_dest_check_disabled ? [{
       sid       = "DisableSourceDestCheck"
@@ -90,6 +111,11 @@ data "aws_route_table" "target" {
   subnet_id = each.value
 }
 
+data "aws_vpc" "this" {
+  count = local.routes_enabled && length(var.route_source_cidrs) == 0 ? 1 : 0
+  id    = var.vpc_id
+}
+
 # Note: `trunk` ignores that this rule is already listed in `.trivyignore` file.
 # Bucket does not have versioning enabled
 # trivy:ignore:AVD-AWS-0090
@@ -106,7 +132,7 @@ module "tailscale_subnet_router" {
   create_run_shell_document = var.create_run_shell_document
 
   additional_security_group_ids   = var.additional_security_group_ids
-  additional_security_group_rules = var.additional_security_group_rules
+  additional_security_group_rules = merge(var.additional_security_group_rules, local.routing_security_group_rules)
 
   session_logging_kms_key_alias     = var.session_logging_kms_key_alias
   session_logging_enabled           = var.session_logging_enabled

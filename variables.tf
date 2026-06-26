@@ -256,6 +256,22 @@ variable "route_table_subnet_ids" {
   EOT
 }
 
+variable "route_source_cidrs" {
+  type        = list(string)
+  default     = []
+  description = <<-EOT
+  Source CIDRs allowed to be forwarded VPC -> tailnet through the subnet router. When
+  `route_destination_cidrs` is set, an ingress rule for these CIDRs is added to the router's primary
+  security group, because AWS evaluates the security group against routed-through traffic at the ENI
+  and would otherwise drop it. Defaults to the router's VPC CIDR when empty; set this to narrow the
+  allowed sources (e.g. only the subnets that originate VPC -> tailnet traffic).
+  EOT
+  validation {
+    condition     = can([for cidr in var.route_source_cidrs : cidrsubnet(cidr, 0, 0)])
+    error_message = "All elements in the list must be valid CIDR blocks."
+  }
+}
+
 variable "authkey_config" {
   default = {
     "tailscale_tailnet_key" = {

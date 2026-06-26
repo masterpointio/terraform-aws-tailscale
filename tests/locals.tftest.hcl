@@ -37,6 +37,11 @@ mock_provider "aws" {
       route_table_id = "rtb-frommock"
     }
   }
+  mock_data "aws_vpc" {
+    defaults = {
+      cidr_block = "172.16.0.0/16"
+    }
+  }
   mock_resource "aws_iam_policy" {
     defaults = {
       arn = "arn:aws:iam::123456789012:policy/mock"
@@ -167,6 +172,50 @@ run "test_routes_via_explicit_route_table_ids" {
       strcontains(local.userdata, "delete-route")
     )
     error_message = "Expected a systemd unit with ExecStop cleanup of the routes"
+  }
+
+  # Forwarded sources default to the VPC CIDR (mocked) and open the primary SG
+  assert {
+    condition = (
+      join(",", local.route_source_cidrs) == "172.16.0.0/16" &&
+      join(",", local.routing_security_group_rules["tailscale-vpc-forward"].cidr_blocks) == "172.16.0.0/16"
+    )
+    error_message = "Expected an ingress SG rule for the VPC CIDR when forwarding is enabled"
+  }
+}
+
+run "test_route_source_cidrs_override" {
+  command = apply
+
+  variables {
+    source_dest_check       = false
+    route_table_ids         = ["rtb-explicit1"]
+    route_destination_cidrs = ["100.64.0.0/10"]
+    route_source_cidrs      = ["10.20.0.0/24", "10.20.1.0/24"]
+  }
+
+  assert {
+    condition     = join(",", local.route_source_cidrs) == "10.20.0.0/24,10.20.1.0/24"
+    error_message = "Expected explicit route_source_cidrs to override the VPC CIDR default"
+  }
+
+  assert {
+    condition     = join(",", local.routing_security_group_rules["tailscale-vpc-forward"].cidr_blocks) == "10.20.0.0/24,10.20.1.0/24"
+    error_message = "Expected the SG ingress rule to use the explicit source CIDRs"
+  }
+}
+
+run "test_no_sg_rule_without_routes" {
+  command = apply
+
+  variables {
+    source_dest_check = false
+  }
+
+  # source/dest check alone (no routes) must not open the SG
+  assert {
+    condition     = length(local.routing_security_group_rules) == 0
+    error_message = "Expected no SG ingress rule when no routes are configured"
   }
 }
 

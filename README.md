@@ -102,6 +102,12 @@ or the VPC main route table when none); the result is combined with `route_table
 grants the router instances only the IAM permissions this feature requires, and only when it is
 enabled.
 
+AWS also evaluates the router's security group against traffic routed *through* its ENI, so the
+forwarded sources need a matching ingress rule or the packets are dropped. When
+`route_destination_cidrs` is set, the module adds an ingress rule to the router's primary security
+group for the router's VPC CIDR by default. Set `route_source_cidrs` to narrow this to only the
+subnets that originate VPC → tailnet traffic.
+
 Because the router runs in an Auto Scaling Group, the routes are claimed by the instances themselves
 rather than as Terraform resources: an instance installs them at boot and removes them on graceful
 shutdown, so the routes follow ASG replacements and a normal teardown leaves no routes behind. They
@@ -232,6 +238,7 @@ The above configuration ensures that the subnet router can establish direct conn
 | [tailscale_oauth_client.default](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/oauth_client) | resource |
 | [tailscale_tailnet_key.default](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/tailnet_key) | resource |
 | [aws_route_table.target](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/route_table) | data source |
+| [aws_vpc.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/vpc) | data source |
 
 ## Inputs
 
@@ -274,6 +281,7 @@ The above configuration ensures that the subnet router can establish direct conn
 | <a name="input_primary_tag"></a> [primary\_tag](#input\_primary\_tag) | The primary tag to apply to the Tailscale Subnet Router machine. Do not include the `tag:` prefix. This must match the OAuth client's tag. If not provided, the module will use the module's ID as the primary tag, which is configured in context.tf | `string` | `null` | no |
 | <a name="input_regex_replace_chars"></a> [regex\_replace\_chars](#input\_regex\_replace\_chars) | Terraform regular expression (regex) string.<br/>Characters matching the regex will be removed from the ID elements.<br/>If not set, `"/[^a-zA-Z0-9-]/"` is used to remove all characters other than hyphens, letters and digits. | `string` | `null` | no |
 | <a name="input_route_destination_cidrs"></a> [route\_destination\_cidrs](#input\_route\_destination\_cidrs) | Destination CIDRs to route from the VPC into the tailnet through the subnet router, installed into<br/>every route table resolved from `route_table_ids` and `route_table_subnet_ids`.<br/>Example: `["100.64.0.0/10"]` for the Tailscale CGNAT range.<br/>Each instance upserts these routes pointing at its own ENI at boot, which re-claims them after an<br/>ASG replacement. Requires `source_dest_check = false` to be useful. | `list(string)` | `[]` | no |
+| <a name="input_route_source_cidrs"></a> [route\_source\_cidrs](#input\_route\_source\_cidrs) | Source CIDRs allowed to be forwarded VPC -> tailnet through the subnet router. When<br/>`route_destination_cidrs` is set, an ingress rule for these CIDRs is added to the router's primary<br/>security group, because AWS evaluates the security group against routed-through traffic at the ENI<br/>and would otherwise drop it. Defaults to the router's VPC CIDR when empty; set this to narrow the<br/>allowed sources (e.g. only the subnets that originate VPC -> tailnet traffic). | `list(string)` | `[]` | no |
 | <a name="input_route_table_ids"></a> [route\_table\_ids](#input\_route\_table\_ids) | VPC route table IDs into which `route_destination_cidrs` are installed pointing at the subnet<br/>router ENI. Combined (union, deduplicated) with the route tables resolved from<br/>`route_table_subnet_ids`. | `list(string)` | `[]` | no |
 | <a name="input_route_table_subnet_ids"></a> [route\_table\_subnet\_ids](#input\_route\_table\_subnet\_ids) | Subnet IDs whose associated route tables receive `route_destination_cidrs` pointing at the subnet<br/>router ENI. Each subnet is resolved to its effective route table (its explicit association, or the<br/>VPC main route table when none). Combined (union, deduplicated) with `route_table_ids`. | `list(string)` | `[]` | no |
 | <a name="input_session_logging_enabled"></a> [session\_logging\_enabled](#input\_session\_logging\_enabled) | To enable CloudWatch and S3 session logging or not.<br/>  Note this does not apply to SSH sessions as AWS cannot log those sessions. | `bool` | `true` | no |
