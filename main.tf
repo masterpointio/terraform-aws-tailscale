@@ -207,7 +207,7 @@ module "routing_policy" {
   source  = "cloudposse/iam-policy/aws"
   version = "2.0.2"
 
-  name        = var.routing_policy_name
+  attributes  = ["routing"]
   description = "VPC -> tailnet routing access for ${module.this.id} subnet router (source/dest check and route table management)."
 
   iam_policy_enabled = true

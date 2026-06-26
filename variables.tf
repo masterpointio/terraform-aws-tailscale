@@ -361,13 +361,3 @@ variable "ssm_policy_name" {
   Multiple instances of this module can be used in the same account by setting a unique `ssm_policy_name` for each instance.
   EOF
 }
-
-variable "routing_policy_name" {
-  default     = "routing"
-  type        = string
-  description = <<EOF
-  The name of the IAM policy granting the subnet router permission to disable its own source/dest
-  check and manage routes. Only created when `source_dest_check = false` or routes are configured.
-  Multiple instances of this module can be used in the same account by setting a unique `routing_policy_name` for each instance.
-  EOF
-}
