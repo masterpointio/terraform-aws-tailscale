@@ -14,8 +14,51 @@ locals {
   tailscale_up_extra_flags_enabled  = length(var.tailscale_up_extra_flags) > 0
   tailscale_set_extra_flags_enabled = length(var.tailscale_set_extra_flags) > 0
 
+  source_dest_check_disabled = var.source_dest_check == false
+
+  # A subnet resolves to its explicit route table association, or the VPC main table when none.
+  resolved_route_table_ids = distinct(concat(
+    var.route_table_ids,
+    [for rt in data.aws_route_table.target : rt.route_table_id],
+  ))
+  routes_enabled = length(local.resolved_route_table_ids) > 0 && length(var.route_destination_cidrs) > 0
+
+  routing_iam_enabled = local.source_dest_check_disabled || local.routes_enabled
+
+  routing_statements = concat(
+    local.source_dest_check_disabled ? [{
+      sid       = "DisableSourceDestCheck"
+      effect    = "Allow"
+      actions   = ["ec2:ModifyInstanceAttribute"]
+      resources = ["arn:aws:ec2:*:*:instance/*"]
+      conditions = [{
+        test     = "StringEquals"
+        variable = "ec2:ResourceTag/Name"
+        values   = [module.this.id]
+      }]
+    }] : [],
+    local.routes_enabled ? [
+      {
+        sid        = "ManageRoutes"
+        effect     = "Allow"
+        actions    = ["ec2:CreateRoute", "ec2:ReplaceRoute", "ec2:DeleteRoute"]
+        resources  = [for id in local.resolved_route_table_ids : "arn:aws:ec2:*:*:route-table/${id}"]
+        conditions = []
+      },
+      {
+        # DescribeRouteTables has no resource-level support; the instance reads route ownership
+        # before deleting so it never removes a route a replacement has already re-claimed.
+        sid        = "DescribeRouteTables"
+        effect     = "Allow"
+        actions    = ["ec2:DescribeRouteTables"]
+        resources  = ["*"]
+        conditions = []
+      },
+    ] : [],
+  )
+
   userdata = templatefile("${path.module}/userdata.sh.tmpl", {
-    authkey           = coalesce(
+    authkey = coalesce(
       one(tailscale_oauth_client.default[*].key),
       one(tailscale_tailnet_key.default[*].key),
     )
@@ -34,7 +77,17 @@ locals {
 
     journald_system_max_use    = var.journald_system_max_use
     journald_max_retention_sec = var.journald_max_retention_sec
+
+    source_dest_check_disabled = local.source_dest_check_disabled
+    routes_enabled             = local.routes_enabled
+    route_table_ids            = join(",", local.resolved_route_table_ids)
+    route_destination_cidrs    = join(",", var.route_destination_cidrs)
   })
+}
+
+data "aws_route_table" "target" {
+  for_each  = toset(var.route_table_subnet_ids)
+  subnet_id = each.value
 }
 
 # Note: `trunk` ignores that this rule is already listed in `.trivyignore` file.
@@ -147,4 +200,26 @@ resource "aws_iam_role_policy_attachment" "default" {
 resource "aws_iam_role_policy_attachment" "cw_agent" {
   role       = module.tailscale_subnet_router.role_id
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
+module "routing_policy" {
+  count   = local.routing_iam_enabled ? 1 : 0
+  source  = "cloudposse/iam-policy/aws"
+  version = "2.0.2"
+
+  name        = var.routing_policy_name
+  description = "VPC -> tailnet routing access for ${module.this.id} subnet router (source/dest check and route table management)."
+
+  iam_policy_enabled = true
+  iam_policy = [{
+    statements = local.routing_statements
+  }]
+  context = module.this.context
+  tags    = module.this.tags
+}
+
+resource "aws_iam_role_policy_attachment" "routing" {
+  count      = local.routing_iam_enabled ? 1 : 0
+  role       = module.tailscale_subnet_router.role_id
+  policy_arn = module.routing_policy[0].policy_arn
 }

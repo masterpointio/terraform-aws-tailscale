@@ -202,6 +202,60 @@ variable "advertise_routes" {
   }
 }
 
+#############################
+## VPC -> Tailnet routing ##
+###########################
+
+variable "source_dest_check" {
+  type        = bool
+  default     = true
+  description = <<-EOT
+  Whether the source/destination check is enabled on the subnet router instances.
+  Set to `false` to let the router forward traffic routed *through* its ENI from the VPC into the
+  tailnet (e.g. EKS hybrid nodes reachable on their Tailscale CGNAT addresses). AWS drops such
+  routed-through packets at the ENI while the check is enabled, before the kernel can forward them.
+  Because the router runs in an Auto Scaling Group there is no per-instance attribute to set at
+  launch, so when `false` each instance disables the check on itself at boot via
+  `ec2:ModifyInstanceAttribute`.
+  EOT
+}
+
+variable "route_destination_cidrs" {
+  type        = list(string)
+  default     = []
+  description = <<-EOT
+  Destination CIDRs to route from the VPC into the tailnet through the subnet router, installed into
+  every route table resolved from `route_table_ids` and `route_table_subnet_ids`.
+  Example: `["100.64.0.0/10"]` for the Tailscale CGNAT range.
+  Each instance upserts these routes pointing at its own ENI at boot, which re-claims them after an
+  ASG replacement. Requires `source_dest_check = false` to be useful.
+  EOT
+  validation {
+    condition     = can([for cidr in var.route_destination_cidrs : cidrsubnet(cidr, 0, 0)])
+    error_message = "All elements in the list must be valid CIDR blocks."
+  }
+}
+
+variable "route_table_ids" {
+  type        = list(string)
+  default     = []
+  description = <<-EOT
+  VPC route table IDs into which `route_destination_cidrs` are installed pointing at the subnet
+  router ENI. Combined (union, deduplicated) with the route tables resolved from
+  `route_table_subnet_ids`.
+  EOT
+}
+
+variable "route_table_subnet_ids" {
+  type        = list(string)
+  default     = []
+  description = <<-EOT
+  Subnet IDs whose associated route tables receive `route_destination_cidrs` pointing at the subnet
+  router ENI. Each subnet is resolved to its effective route table (its explicit association, or the
+  VPC main route table when none). Combined (union, deduplicated) with `route_table_ids`.
+  EOT
+}
+
 variable "authkey_config" {
   default = {
     "tailscale_tailnet_key" = {
@@ -231,7 +285,7 @@ variable "authkey_config" {
   type = object({
     tailscale_oauth_client = optional(object({
       description = string
-      scopes = list(string)
+      scopes      = list(string)
     }))
     tailscale_tailnet_key = optional(object({
       description   = string
@@ -244,7 +298,7 @@ variable "authkey_config" {
 
   validation {
     condition = (
-      var.authkey_config.tailscale_oauth_client == null && var.authkey_config.tailscale_tailnet_key != null || 
+      var.authkey_config.tailscale_oauth_client == null && var.authkey_config.tailscale_tailnet_key != null ||
       var.authkey_config.tailscale_oauth_client != null && var.authkey_config.tailscale_tailnet_key == null
     )
     error_message = "Exactly one of 'tailscale_oauth_client' or 'tailscale_tailnet_key' must be defined in authkey_config."
@@ -305,5 +359,15 @@ variable "ssm_policy_name" {
   This is used to attach the SSM policy to the Tailscale Subnet Router EC2 instance.
   This is only applied if `ssm_state_enabled` is true.
   Multiple instances of this module can be used in the same account by setting a unique `ssm_policy_name` for each instance.
+  EOF
+}
+
+variable "routing_policy_name" {
+  default     = "routing"
+  type        = string
+  description = <<EOF
+  The name of the IAM policy granting the subnet router permission to disable its own source/dest
+  check and manage routes. Only created when `source_dest_check = false` or routes are configured.
+  Multiple instances of this module can be used in the same account by setting a unique `routing_policy_name` for each instance.
   EOF
 }
