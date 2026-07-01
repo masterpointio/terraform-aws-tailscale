@@ -7,32 +7,32 @@ cli:
 plugins:
   sources:
     - id: trunk
-      ref: v1.10.0
+      ref: v1.10.2
       uri: https://github.com/trunk-io/plugins
 # Many linters and tools depend on runtimes - configure them here. (https://docs.trunk.io/runtimes)
 runtimes:
   enabled:
     - node@22.16.0
-    - python@3.10.8
+    - python@3.14.4
 # This is the section where you manage your linters. (https://docs.trunk.io/check/configuration)
 lint:
   disabled:
     # Incompatible with some Terraform features: https://github.com/tenable/terrascan/issues/1331
     - terrascan
   enabled:
-    - renovate@43.49.0
-    - tofu@1.11.5
+    - renovate@43.249.5
+    - tofu@1.12.3
     - terraform@1.1.0
-    - actionlint@1.7.11
-    - checkov@3.2.506
+    - actionlint@1.7.12
+    - checkov@3.3.6
     - git-diff-check
-    - markdownlint@0.48.0
-    - prettier@3.8.1
-    - tflint@0.61.0
-    - trivy@0.69.2
-    - trufflehog@3.93.6
+    - markdownlint@0.49.0
+    - prettier@3.9.4
+    - tflint@0.63.1
+    - trivy@0.72.0
+    - trufflehog@3.95.7
     - yamllint@1.38.0
-    - zizmor@1.25.2
+    - zizmor@1.26.1
   definitions:
     - name: zizmor
       environment:
