@@ -141,5 +141,119 @@ tailscale set ${tailscale_set_extra_flags} \
   || { echo "WARNING: 'tailscale set' failed; continuing."; }
 %{ endif }
 
+# --------------------- VPC -> tailnet routing integration ----
+# AWS drops packets routed *through* this ENI from the VPC (dst != ENI IP) while source/dest check
+# is enabled, before the kernel can forward them. Because the router runs in an ASG there is no
+# per-instance launch attribute to set, so each instance disables the check on itself and (re)claims
+# its routes via a systemd unit. ExecStart re-claims after an ASG replacement swaps the ENI;
+# ExecStop deletes the routes on graceful shutdown so teardown/scale-in does not leave blackholes.
+%{ if source_dest_check_disabled == true || routes_enabled == true }
+echo "Installing VPC -> tailnet routing integration..."
+
+install -d -m 0755 /etc/sysconfig /usr/local/sbin
+cat >/etc/sysconfig/tailscale-routes <<EOF
+SOURCE_DEST_CHECK_DISABLED=${source_dest_check_disabled}
+ROUTE_TABLE_IDS="${route_table_ids}"
+ROUTE_DESTINATION_CIDRS="${route_destination_cidrs}"
+EOF
+
+cat >/usr/local/sbin/tailscale-routes.sh <<'SCRIPT'
+#!/bin/bash
+# Claim/release VPC -> tailnet routes for this Tailscale subnet router instance.
+set -uo pipefail
+# shellcheck disable=SC1091
+. /etc/sysconfig/tailscale-routes
+
+TOKEN=$(curl -sf -X PUT "http://169.254.169.254/latest/api/token" \
+  -H "X-aws-ec2-metadata-token-ttl-seconds: 300") || TOKEN=""
+imds() { curl -sf -H "X-aws-ec2-metadata-token: $TOKEN" "http://169.254.169.254/latest/meta-data/$1"; }
+
+INSTANCE_ID=$(imds instance-id)
+MAC=$(imds network/interfaces/macs/ | head -n1 | tr -d '/')
+ENI_ID=$(imds "network/interfaces/macs/$MAC/interface-id")
+AWS_DEFAULT_REGION=$(imds placement/region)
+export AWS_DEFAULT_REGION
+echo "instance=$INSTANCE_ID eni=$ENI_ID region=$AWS_DEFAULT_REGION"
+
+cidr_flag() { [[ "$1" == *:* ]] && echo "--destination-ipv6-cidr-block" || echo "--destination-cidr-block"; }
+
+each_route() {
+  # Calls "$1 <route-table-id> <cidr>" for every non-empty pair.
+  local fn="$1" rtb cidr
+  IFS=',' read -ra _RTBS <<< "$ROUTE_TABLE_IDS"
+  IFS=',' read -ra _CIDRS <<< "$ROUTE_DESTINATION_CIDRS"
+  for rtb in "$${_RTBS[@]}"; do
+    [ -n "$rtb" ] || continue
+    for cidr in "$${_CIDRS[@]}"; do
+      [ -n "$cidr" ] || continue
+      "$fn" "$rtb" "$cidr"
+    done
+  done
+}
+
+upsert_route() {
+  local rtb="$1" cidr="$2" flag
+  flag=$(cidr_flag "$cidr")
+  echo "Upserting route $cidr -> $ENI_ID in $rtb..."
+  if ! aws ec2 create-route --route-table-id "$rtb" "$flag" "$cidr" --network-interface-id "$ENI_ID" >/dev/null 2>&1; then
+    aws ec2 replace-route --route-table-id "$rtb" "$flag" "$cidr" --network-interface-id "$ENI_ID" \
+      || echo "WARNING: failed to upsert route $cidr in $rtb."
+  fi
+}
+
+delete_route() {
+  local rtb="$1" cidr="$2" flag owner
+  flag=$(cidr_flag "$cidr")
+  # Only delete a route that still points at *our* ENI, so we never remove a route a replacement
+  # instance has already re-claimed during an instance refresh.
+  owner=$(aws ec2 describe-route-tables --route-table-ids "$rtb" \
+    --query "RouteTables[0].Routes[?DestinationCidrBlock=='$cidr' || DestinationIpv6CidrBlock=='$cidr'].NetworkInterfaceId | [0]" \
+    --output text 2>/dev/null)
+  if [ "$owner" = "$ENI_ID" ]; then
+    echo "Deleting route $cidr -> $ENI_ID in $rtb..."
+    aws ec2 delete-route --route-table-id "$rtb" "$flag" "$cidr" \
+      || echo "WARNING: failed to delete route $cidr in $rtb."
+  fi
+}
+
+case "$${1:-up}" in
+  up)
+    if [ "$${SOURCE_DEST_CHECK_DISABLED:-false}" = "true" ]; then
+      echo "Disabling source/dest check on $INSTANCE_ID..."
+      aws ec2 modify-instance-attribute --instance-id "$INSTANCE_ID" --no-source-dest-check \
+        || echo "WARNING: failed to disable source/dest check."
+    fi
+    each_route upsert_route
+    ;;
+  down)
+    each_route delete_route
+    ;;
+esac
+SCRIPT
+chmod 0755 /usr/local/sbin/tailscale-routes.sh
+
+cat >/etc/systemd/system/tailscale-routes.service <<'UNIT'
+[Unit]
+Description=Claim VPC -> tailnet routes for the Tailscale subnet router
+After=tailscaled.service network-online.target
+Wants=network-online.target
+Requires=tailscaled.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/tailscale-routes.sh up
+ExecStop=/usr/local/sbin/tailscale-routes.sh down
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+systemctl daemon-reload
+systemctl enable --now tailscale-routes.service \
+  || echo "WARNING: failed to enable tailscale-routes.service."
+%{ endif }
+
 echo "Tailscale setup completed."
 echo "User-data script finished successfully."

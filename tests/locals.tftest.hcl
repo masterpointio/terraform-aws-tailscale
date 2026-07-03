@@ -32,6 +32,21 @@ mock_provider "aws" {
       id = "lt-mock123456789"
     }
   }
+  mock_data "aws_route_table" {
+    defaults = {
+      route_table_id = "rtb-frommock"
+    }
+  }
+  mock_data "aws_vpc" {
+    defaults = {
+      cidr_block = "172.16.0.0/16"
+    }
+  }
+  mock_resource "aws_iam_policy" {
+    defaults = {
+      arn = "arn:aws:iam::123456789012:policy/mock"
+    }
+  }
 }
 
 run "test_primary_tag_provided" {
@@ -90,5 +105,136 @@ run "test_tailscaled_extra_flags" {
   assert {
     condition     = strcontains(local.userdata, "--state=mem:") && strcontains(local.userdata, "--verbose=1")
     error_message = "Expected userdata to contain tailscaled extra flags"
+  }
+}
+
+run "test_routing_disabled_by_default" {
+  command = apply
+
+  # No source/dest check disable and no routing IAM policy with module defaults
+  assert {
+    condition     = local.routing_iam_enabled == false
+    error_message = "Expected routing IAM to be disabled by default"
+  }
+
+  assert {
+    condition     = !strcontains(local.userdata, "modify-instance-attribute")
+    error_message = "Expected userdata to not touch source/dest check by default"
+  }
+}
+
+run "test_source_dest_check_disabled" {
+  command = apply
+
+  variables {
+    source_dest_check = false
+  }
+
+  assert {
+    condition     = local.source_dest_check_disabled == true && local.routing_iam_enabled == true
+    error_message = "Expected source/dest check disable to enable routing IAM"
+  }
+
+  assert {
+    condition     = strcontains(local.userdata, "--no-source-dest-check")
+    error_message = "Expected userdata to disable source/dest check"
+  }
+}
+
+run "test_routes_via_explicit_route_table_ids" {
+  command = apply
+
+  variables {
+    source_dest_check       = false
+    route_table_ids         = ["rtb-explicit1"]
+    route_destination_cidrs = ["100.64.0.0/10"]
+  }
+
+  assert {
+    condition     = local.routes_enabled == true && contains(local.resolved_route_table_ids, "rtb-explicit1")
+    error_message = "Expected explicit route table id to be resolved"
+  }
+
+  assert {
+    condition = (
+      strcontains(local.userdata, "rtb-explicit1") &&
+      strcontains(local.userdata, "100.64.0.0/10") &&
+      strcontains(local.userdata, "create-route")
+    )
+    error_message = "Expected userdata to upsert the CGNAT route into the explicit route table"
+  }
+
+  # Routes are managed by a systemd unit whose ExecStop deletes them on graceful shutdown
+  assert {
+    condition = (
+      strcontains(local.userdata, "tailscale-routes.service") &&
+      strcontains(local.userdata, "ExecStop=/usr/local/sbin/tailscale-routes.sh down") &&
+      strcontains(local.userdata, "delete-route")
+    )
+    error_message = "Expected a systemd unit with ExecStop cleanup of the routes"
+  }
+
+  # Forwarded sources default to the VPC CIDR (mocked) and open the primary SG
+  assert {
+    condition = (
+      join(",", local.route_source_cidrs) == "172.16.0.0/16" &&
+      join(",", local.routing_security_group_rules["tailscale-vpc-forward"].cidr_blocks) == "172.16.0.0/16"
+    )
+    error_message = "Expected an ingress SG rule for the VPC CIDR when forwarding is enabled"
+  }
+}
+
+run "test_route_source_cidrs_override" {
+  command = apply
+
+  variables {
+    source_dest_check       = false
+    route_table_ids         = ["rtb-explicit1"]
+    route_destination_cidrs = ["100.64.0.0/10"]
+    route_source_cidrs      = ["10.20.0.0/24", "10.20.1.0/24"]
+  }
+
+  assert {
+    condition     = join(",", local.route_source_cidrs) == "10.20.0.0/24,10.20.1.0/24"
+    error_message = "Expected explicit route_source_cidrs to override the VPC CIDR default"
+  }
+
+  assert {
+    condition     = join(",", local.routing_security_group_rules["tailscale-vpc-forward"].cidr_blocks) == "10.20.0.0/24,10.20.1.0/24"
+    error_message = "Expected the SG ingress rule to use the explicit source CIDRs"
+  }
+}
+
+run "test_no_sg_rule_without_routes" {
+  command = apply
+
+  variables {
+    source_dest_check = false
+  }
+
+  # source/dest check alone (no routes) must not open the SG
+  assert {
+    condition     = length(local.routing_security_group_rules) == 0
+    error_message = "Expected no SG ingress rule when no routes are configured"
+  }
+}
+
+run "test_routes_resolved_from_subnet_ids" {
+  command = apply
+
+  variables {
+    route_table_subnet_ids  = ["subnet-aaa"]
+    route_destination_cidrs = ["100.64.0.0/10"]
+  }
+
+  # aws_route_table data is mocked to return rtb-frommock
+  assert {
+    condition     = contains(local.resolved_route_table_ids, "rtb-frommock")
+    error_message = "Expected subnet to resolve to its route table via data source"
+  }
+
+  assert {
+    condition     = strcontains(local.userdata, "rtb-frommock")
+    error_message = "Expected userdata to upsert routes into the subnet-resolved route table"
   }
 }

@@ -61,6 +61,59 @@ Here is an example of using this module:
 
 - [`examples/complete`](https://github.com/masterpointio/terraform-aws-tailscale/) - complete example of using this module
 
+## Routing VPC Traffic Into the Tailnet (SNAT-less / bidirectional routing)
+
+By default the subnet router advertises VPC subnets into the tailnet (**tailnet → VPC**). The reverse
+direction (**VPC → tailnet**) requires extra setup because routed-through packets arrive on the
+router's AWS ENI, where the default `SourceDestCheck=true` drops them before the kernel can forward
+them. A typical use case is **EKS hybrid nodes** whose kubelet `InternalIP` is the node's Tailscale
+CGNAT address (`100.64.0.0/10`): the EKS control plane must reach kubelet by routing to the node's
+tailnet IP through this router.
+
+Two pieces are needed, both handled by the module:
+
+1. **Disable the source/dest check** on the router instances. Set `source_dest_check = false`. Because
+   the router runs in an Auto Scaling Group (no per-instance `aws_instance` to set the attribute on at
+   launch), each instance disables the check on itself at boot, re-applying automatically whenever the
+   ASG replaces an instance.
+2. **Install VPC routes** pointing the desired CIDRs at the router's ENI. Provide the destination
+   CIDRs and the route tables to write them into:
+
+```hcl
+module "tailscale" {
+  source = "masterpointio/tailscale/aws"
+
+  vpc_id           = module.vpc.vpc_id
+  subnet_ids       = module.subnets.private_subnet_ids
+  advertise_routes = [module.vpc.vpc_cidr_block]
+
+  # VPC -> tailnet routing for EKS hybrid nodes on their CGNAT addresses
+  source_dest_check       = false
+  route_destination_cidrs = ["100.64.0.0/10"]
+
+  # Target route tables, given directly and/or resolved from subnets
+  route_table_ids        = [aws_route_table.control_plane.id]
+  route_table_subnet_ids = module.subnets.private_subnet_ids
+}
+```
+
+`route_table_subnet_ids` resolves each subnet to its effective route table (its explicit association,
+or the VPC main route table when none); the result is combined with `route_table_ids`. The module
+grants the router instances only the IAM permissions this feature requires, and only when it is
+enabled.
+
+AWS also evaluates the router's security group against traffic routed *through* its ENI, so the
+forwarded sources need a matching ingress rule or the packets are dropped. When
+`route_destination_cidrs` is set, the module adds an ingress rule to the router's primary security
+group for the router's VPC CIDR by default. Set `route_source_cidrs` to narrow this to only the
+subnets that originate VPC → tailnet traffic.
+
+Because the router runs in an Auto Scaling Group, the routes are claimed by the instances themselves
+rather than as Terraform resources: an instance installs them at boot and removes them on graceful
+shutdown, so the routes follow ASG replacements and a normal teardown leaves no routes behind. They
+are therefore not tracked in Terraform state, and an instance that stops abruptly (e.g. spot
+reclamation) can leave a stale route until the next instance reclaims it.
+
 ## System Logging and Monitoring Setup
 
 On Linux and other Unix-like systems, Tailscale typically runs as a systemd service, which by default does not rotate logs - potentially allowing system logs to grow until the disk fills.
@@ -169,6 +222,7 @@ The above configuration ensures that the subnet router can establish direct conn
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_routing_policy"></a> [routing\_policy](#module\_routing\_policy) | cloudposse/iam-policy/aws | 2.0.2 |
 | <a name="module_ssm_policy"></a> [ssm\_policy](#module\_ssm\_policy) | cloudposse/iam-policy/aws | 2.0.2 |
 | <a name="module_ssm_state"></a> [ssm\_state](#module\_ssm\_state) | cloudposse/ssm-parameter-store/aws | 0.13.0 |
 | <a name="module_tailscale_subnet_router"></a> [tailscale\_subnet\_router](#module\_tailscale\_subnet\_router) | masterpointio/ssm-agent/aws | 1.8.0 |
@@ -180,8 +234,11 @@ The above configuration ensures that the subnet router can establish direct conn
 |------|------|
 | [aws_iam_role_policy_attachment.cw_agent](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_iam_role_policy_attachment.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_iam_role_policy_attachment.routing](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [tailscale_oauth_client.default](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/oauth_client) | resource |
 | [tailscale_tailnet_key.default](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/tailnet_key) | resource |
+| [aws_route_table.target](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/route_table) | data source |
+| [aws_vpc.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/vpc) | data source |
 
 ## Inputs
 
@@ -198,7 +255,7 @@ The above configuration ensures that the subnet router can establish direct conn
 | <a name="input_architecture"></a> [architecture](#input\_architecture) | The architecture of the AMI (e.g., x86\_64, arm64) | `string` | `"arm64"` | no |
 | <a name="input_associate_public_ip_address"></a> [associate\_public\_ip\_address](#input\_associate\_public\_ip\_address) | Associate public IP address with subnet router | `bool` | `null` | no |
 | <a name="input_attributes"></a> [attributes](#input\_attributes) | ID element. Additional attributes (e.g. `workers` or `cluster`) to add to `id`,<br/>in the order they appear in the list. New attributes are appended to the<br/>end of the list. The elements of the list are joined by the `delimiter`<br/>and treated as a single ID element. | `list(string)` | `[]` | no |
-| <a name="input_authkey_config"></a> [authkey\_config](#input\_authkey\_config) | Configuration for the auth key used in `tailscale up` command.<br/><br/>One of `tailscale_oauth_client` or `tailscale_tailnet_key` must be set.<br/><br/>For both options, `tags` are configured by the module and are the same that are passed to `tailscale up` command via `--advertise-tags=<tags>` flag.<br/><br/>Minimal `scopes` required for `tailscale_oauth_client` are `["auth_keys", "devices:core", "devices:routes", "dns"]`.<br/><br/>For additional information, please visit:<br/>- [tailscale up command](https://tailscale.com/docs/reference/tailscale-cli/up)<br/>- [Terraform tailscale\_oauth\_client](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/oauth_client)<br/>- [Terraform tailscale\_tailnet\_key](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/tailnet_key) | <pre>object({<br/>    tailscale_oauth_client = optional(object({<br/>      description = string<br/>      scopes = list(string)<br/>    }))<br/>    tailscale_tailnet_key = optional(object({<br/>      description   = string<br/>      ephemeral     = bool<br/>      expiry        = number<br/>      preauthorized = bool<br/>      reusable      = bool<br/>    }))<br/>  })</pre> | <pre>{<br/>  "tailscale_tailnet_key": {<br/>    "ephemeral": false,<br/>    "expiry": 7776000,<br/>    "preauthorized": true,<br/>    "reusable": true<br/>  }<br/>}</pre> | no |
+| <a name="input_authkey_config"></a> [authkey\_config](#input\_authkey\_config) | Configuration for the auth key used in `tailscale up` command.<br/><br/>One of `tailscale_oauth_client` or `tailscale_tailnet_key` must be set.<br/><br/>For both options, `tags` are configured by the module and are the same that are passed to `tailscale up` command via `--advertise-tags=<tags>` flag.<br/><br/>Minimal `scopes` required for `tailscale_oauth_client` are `["auth_keys", "devices:core", "devices:routes", "dns"]`.<br/><br/>For additional information, please visit:<br/>- [tailscale up command](https://tailscale.com/docs/reference/tailscale-cli/up)<br/>- [Terraform tailscale\_oauth\_client](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/oauth_client)<br/>- [Terraform tailscale\_tailnet\_key](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/tailnet_key) | <pre>object({<br/>    tailscale_oauth_client = optional(object({<br/>      description = string<br/>      scopes      = list(string)<br/>    }))<br/>    tailscale_tailnet_key = optional(object({<br/>      description   = string<br/>      ephemeral     = bool<br/>      expiry        = number<br/>      preauthorized = bool<br/>      reusable      = bool<br/>    }))<br/>  })</pre> | <pre>{<br/>  "tailscale_tailnet_key": {<br/>    "description": "Subnet Router",<br/>    "ephemeral": false,<br/>    "expiry": 7776000,<br/>    "preauthorized": true,<br/>    "reusable": true<br/>  }<br/>}</pre> | no |
 | <a name="input_context"></a> [context](#input\_context) | Single object for setting entire context at once.<br/>See description of individual variables for details.<br/>Leave string and numeric variables as `null` to use default value.<br/>Individual variable settings (non-null) override settings in context object,<br/>except for attributes, tags, and additional\_tag\_map, which are merged. | `any` | <pre>{<br/>  "additional_tag_map": {},<br/>  "attributes": [],<br/>  "delimiter": null,<br/>  "descriptor_formats": {},<br/>  "enabled": true,<br/>  "environment": null,<br/>  "id_length_limit": null,<br/>  "label_key_case": null,<br/>  "label_order": [],<br/>  "label_value_case": null,<br/>  "labels_as_tags": [<br/>    "unset"<br/>  ],<br/>  "name": null,<br/>  "namespace": null,<br/>  "regex_replace_chars": null,<br/>  "stage": null,<br/>  "tags": {},<br/>  "tenant": null<br/>}</pre> | no |
 | <a name="input_create_run_shell_document"></a> [create\_run\_shell\_document](#input\_create\_run\_shell\_document) | Whether or not to create the SSM-SessionManagerRunShell SSM Document. | `bool` | `true` | no |
 | <a name="input_delimiter"></a> [delimiter](#input\_delimiter) | Delimiter to be used between ID elements.<br/>Defaults to `-` (hyphen). Set to `""` to use no delimiter at all. | `string` | `null` | no |
@@ -223,9 +280,14 @@ The above configuration ensures that the subnet router can establish direct conn
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | ID element. Usually an abbreviation of your organization name, e.g. 'eg' or 'cp', to help ensure generated IDs are globally unique | `string` | `null` | no |
 | <a name="input_primary_tag"></a> [primary\_tag](#input\_primary\_tag) | The primary tag to apply to the Tailscale Subnet Router machine. Do not include the `tag:` prefix. This must match the OAuth client's tag. If not provided, the module will use the module's ID as the primary tag, which is configured in context.tf | `string` | `null` | no |
 | <a name="input_regex_replace_chars"></a> [regex\_replace\_chars](#input\_regex\_replace\_chars) | Terraform regular expression (regex) string.<br/>Characters matching the regex will be removed from the ID elements.<br/>If not set, `"/[^a-zA-Z0-9-]/"` is used to remove all characters other than hyphens, letters and digits. | `string` | `null` | no |
+| <a name="input_route_destination_cidrs"></a> [route\_destination\_cidrs](#input\_route\_destination\_cidrs) | Destination CIDRs to route from the VPC into the tailnet through the subnet router, installed into<br/>every route table resolved from `route_table_ids` and `route_table_subnet_ids`.<br/>Example: `["100.64.0.0/10"]` for the Tailscale CGNAT range.<br/>Each instance upserts these routes pointing at its own ENI at boot, which re-claims them after an<br/>ASG replacement. Requires `source_dest_check = false` to be useful. | `list(string)` | `[]` | no |
+| <a name="input_route_source_cidrs"></a> [route\_source\_cidrs](#input\_route\_source\_cidrs) | Source CIDRs allowed to be forwarded VPC -> tailnet through the subnet router. When<br/>`route_destination_cidrs` is set, an ingress rule for these CIDRs is added to the router's primary<br/>security group, because AWS evaluates the security group against routed-through traffic at the ENI<br/>and would otherwise drop it. Defaults to the router's VPC CIDR when empty; set this to narrow the<br/>allowed sources (e.g. only the subnets that originate VPC -> tailnet traffic). | `list(string)` | `[]` | no |
+| <a name="input_route_table_ids"></a> [route\_table\_ids](#input\_route\_table\_ids) | VPC route table IDs into which `route_destination_cidrs` are installed pointing at the subnet<br/>router ENI. Combined (union, deduplicated) with the route tables resolved from<br/>`route_table_subnet_ids`. | `list(string)` | `[]` | no |
+| <a name="input_route_table_subnet_ids"></a> [route\_table\_subnet\_ids](#input\_route\_table\_subnet\_ids) | Subnet IDs whose associated route tables receive `route_destination_cidrs` pointing at the subnet<br/>router ENI. Each subnet is resolved to its effective route table (its explicit association, or the<br/>VPC main route table when none). Combined (union, deduplicated) with `route_table_ids`. | `list(string)` | `[]` | no |
 | <a name="input_session_logging_enabled"></a> [session\_logging\_enabled](#input\_session\_logging\_enabled) | To enable CloudWatch and S3 session logging or not.<br/>  Note this does not apply to SSH sessions as AWS cannot log those sessions. | `bool` | `true` | no |
 | <a name="input_session_logging_kms_key_alias"></a> [session\_logging\_kms\_key\_alias](#input\_session\_logging\_kms\_key\_alias) | Alias name for `session_logging` KMS Key.<br/>  This is only applied if 2 conditions are met: (1) `session_logging_kms_key_arn` is unset,<br/>  (2) `session_logging_encryption_enabled` = true. | `string` | `"alias/session_logging"` | no |
 | <a name="input_session_logging_ssm_document_name"></a> [session\_logging\_ssm\_document\_name](#input\_session\_logging\_ssm\_document\_name) | Name for `session_logging` SSM document.<br/>  This is only applied if 2 conditions are met: (1) `session_logging_enabled` = true,<br/>  (2) `create_run_shell_document` = true. | `string` | `"SSM-SessionManagerRunShell-Tailscale"` | no |
+| <a name="input_source_dest_check"></a> [source\_dest\_check](#input\_source\_dest\_check) | Whether the source/destination check is enabled on the subnet router instances.<br/>Set to `false` to let the router forward traffic routed *through* its ENI from the VPC into the<br/>tailnet (e.g. EKS hybrid nodes reachable on their Tailscale CGNAT addresses). AWS drops such<br/>routed-through packets at the ENI while the check is enabled, before the kernel can forward them.<br/>Because the router runs in an Auto Scaling Group there is no per-instance attribute to set at<br/>launch, so when `false` each instance disables the check on itself at boot via<br/>`ec2:ModifyInstanceAttribute`. | `bool` | `true` | no |
 | <a name="input_ssh_enabled"></a> [ssh\_enabled](#input\_ssh\_enabled) | Enable SSH access to the Tailscale Subnet Router EC2 instance. Defaults to true. | `bool` | `true` | no |
 | <a name="input_ssm_policy_name"></a> [ssm\_policy\_name](#input\_ssm\_policy\_name) | The name of the SSM policy to create.<br/>  This is used to attach the SSM policy to the Tailscale Subnet Router EC2 instance.<br/>  This is only applied if `ssm_state_enabled` is true.<br/>  Multiple instances of this module can be used in the same account by setting a unique `ssm_policy_name` for each instance. | `string` | `"ssm"` | no |
 | <a name="input_ssm_state_enabled"></a> [ssm\_state\_enabled](#input\_ssm\_state\_enabled) | Control if tailscaled state is stored in AWS SSM (including preferences and keys).<br/>This tells the Tailscale daemon to write + read state from SSM,<br/>which unlocks important features like retaining the existing tailscale machine name.<br/>See more in the [docs](https://tailscale.com/kb/1278/tailscaled#flags-to-tailscaled). | `bool` | `false` | no |
