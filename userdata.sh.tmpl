@@ -236,8 +236,7 @@ cat >/etc/systemd/system/tailscale-routes.service <<'UNIT'
 [Unit]
 Description=Claim VPC -> tailnet routes for the Tailscale subnet router
 After=tailscaled.service network-online.target
-Wants=network-online.target
-Requires=tailscaled.service
+Wants=network-online.target tailscaled.service
 
 [Service]
 Type=oneshot

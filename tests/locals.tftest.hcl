@@ -174,6 +174,16 @@ run "test_routes_via_explicit_route_table_ids" {
     error_message = "Expected a systemd unit with ExecStop cleanup of the routes"
   }
 
+  # A Requires= dependency on tailscaled would stop this unit on every tailscaled restart,
+  # firing ExecStop and permanently deleting the VPC routes (oneshot units do not restart).
+  assert {
+    condition = (
+      strcontains(local.userdata, "Wants=network-online.target tailscaled.service") &&
+      !strcontains(local.userdata, "Requires=tailscaled.service")
+    )
+    error_message = "Expected the routes unit to weakly depend on tailscaled via Wants=, not Requires="
+  }
+
   # Forwarded sources default to the VPC CIDR (mocked) and open the primary SG
   assert {
     condition = (
