@@ -228,7 +228,8 @@ variable "route_destination_cidrs" {
   every route table resolved from `route_table_ids` and `route_table_subnet_ids`.
   Example: `["100.64.0.0/10"]` for the Tailscale CGNAT range.
   Each instance upserts these routes pointing at its own ENI at boot, which re-claims them after an
-  ASG replacement. Requires `source_dest_check = false` to be useful.
+  ASG replacement. Setting this also disables the source/destination check, which the forwarding
+  path requires.
   EOT
   validation {
     condition     = can([for cidr in var.route_destination_cidrs : cidrsubnet(cidr, 0, 0)])

@@ -247,4 +247,10 @@ run "test_routes_resolved_from_subnet_ids" {
     condition     = strcontains(local.userdata, "rtb-frommock")
     error_message = "Expected userdata to upsert routes into the subnet-resolved route table"
   }
+
+  # Configuring routes must force the source/dest check off even when var.source_dest_check is true
+  assert {
+    condition     = local.source_dest_check_disabled == true && strcontains(local.userdata, "--no-source-dest-check")
+    error_message = "Expected routes to force source/dest check disabled"
+  }
 }

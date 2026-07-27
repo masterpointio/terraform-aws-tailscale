@@ -14,8 +14,6 @@ locals {
   tailscale_up_extra_flags_enabled  = length(var.tailscale_up_extra_flags) > 0
   tailscale_set_extra_flags_enabled = length(var.tailscale_set_extra_flags) > 0
 
-  source_dest_check_disabled = var.source_dest_check == false
-
   # A subnet resolves to its explicit route table association, or the VPC main table when none.
   resolved_route_table_ids = distinct(concat(
     var.route_table_ids,
@@ -23,7 +21,11 @@ locals {
   ))
   routes_enabled = length(local.resolved_route_table_ids) > 0 && length(var.route_destination_cidrs) > 0
 
-  routing_iam_enabled = local.source_dest_check_disabled || local.routes_enabled
+  # The ENI drops routed-through packets while the check is enabled, so configuring VPC -> tailnet
+  # routes forces it off regardless of var.source_dest_check.
+  source_dest_check_disabled = var.source_dest_check == false || local.routes_enabled
+
+  routing_iam_enabled = local.source_dest_check_disabled
 
   # Routed-through (VPC -> tailnet) packets are evaluated against the router's security group at the
   # ENI, so the forwarded sources need an ingress rule or AWS drops them. Default to the VPC CIDR for
