@@ -119,6 +119,8 @@ data "aws_vpc" "this" {
 # Note: `trunk` ignores that this rule is already listed in `.trivyignore` file.
 # Bucket does not have versioning enabled
 # trivy:ignore:AVD-AWS-0090
+# Session logging encryption is managed by the upstream ssm-agent module (session_logging_kms_key_alias)
+# trivy:ignore:AVD-AWS-0017
 module "tailscale_subnet_router" {
   source  = "masterpointio/ssm-agent/aws"
   version = "1.8.0"

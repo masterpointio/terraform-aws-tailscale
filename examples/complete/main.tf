@@ -9,6 +9,8 @@ provider "tailscale" {
   oauth_client_secret = var.oauth_client_secret
 }
 
+# Example code: flow logs are out of scope for a minimal example
+# trivy:ignore:AVD-AWS-0178
 module "vpc" {
   source  = "cloudposse/vpc/aws"
   version = "2.1.1"
@@ -31,6 +33,8 @@ module "subnets" {
   context = module.this.context
 }
 
+# Example code: session log bucket access logging is out of scope for a minimal example
+# trivy:ignore:AVD-AWS-0089
 module "tailscale" {
   source = "../.."
 

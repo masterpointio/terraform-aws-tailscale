@@ -102,7 +102,7 @@ or the VPC main route table when none); the result is combined with `route_table
 grants the router instances only the IAM permissions this feature requires, and only when it is
 enabled.
 
-AWS also evaluates the router's security group against traffic routed *through* its ENI, so the
+AWS also evaluates the router's security group against traffic routed _through_ its ENI, so the
 forwarded sources need a matching ingress rule or the packets are dropped. When
 `route_destination_cidrs` is set, the module adds an ingress rule to the router's primary security
 group for the router's VPC CIDR by default. Set `route_source_cidrs` to narrow this to only the
@@ -118,7 +118,8 @@ reclamation) can leave a stale route until the next instance reclaims it.
 
 On Linux and other Unix-like systems, Tailscale typically runs as a systemd service, which by default does not rotate logs - potentially allowing system logs to grow until the disk fills.
 
-To address this, our user data script configures both a maximum journal size and a retention period to ensure logs are periodically purged. We also install the [CloudWatch Agent](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Install-CloudWatch-Agent.html) with its default configuration so that filesystem usage metrics are reported to AWS.
+To address this, our user data script configures both a maximum journal size and a retention period to ensure logs are periodically purged.
+We also install the [CloudWatch Agent](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Install-CloudWatch-Agent.html) with its default configuration so that filesystem usage metrics are reported to AWS.
 
 👀 To view these metrics, navigate in the AWS Console to “CWAgent” → “AutoScalingGroupName, ImageId, InstanceId, InstanceType, device, fstype, path” → “disk_used_percent” for the root path “/”.
 
@@ -201,7 +202,7 @@ The above configuration ensures that the subnet router can establish direct conn
 4. The outgoing UDP and TCP packets on port `443` are permitted. In our example, [`cloudposse/security-group/aws`](https://github.com/cloudposse/terraform-aws-security-group) module allows all egress.
 
 <!-- prettier-ignore-start -->
-<!-- markdownlint-disable MD013 -->
+<!-- markdownlint-disable MD013 MD049 MD060 -->
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Requirements
 
@@ -310,7 +311,7 @@ The above configuration ensures that the subnet router can establish direct conn
 | <a name="output_launch_template_id"></a> [launch\_template\_id](#output\_launch\_template\_id) | The ID of the Tailscale Subnet Router EC2 instance Launch Template. |
 | <a name="output_security_group_id"></a> [security\_group\_id](#output\_security\_group\_id) | The ID of the Tailscale Subnet Router EC2 instance Security Group. |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
-<!-- markdownlint-enable MD013 -->
+<!-- markdownlint-enable MD013 MD049 MD060 -->
 <!-- prettier-ignore-end -->
 
 ## Built By
