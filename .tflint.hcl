@@ -8,7 +8,15 @@ config {
 
   # Inspect vars passed into "module" blocks. eg, lint AMI value passed into ec2 module.
   # https://github.com/terraform-linters/tflint/blob/master/docs/user-guide/calling-modules.md
-  call_module_type = "all"
+  #
+  # TEMPORARY: this should be "all", but "all" requires the called modules to be
+  # downloaded, and the lint workflow never runs `terraform init`. Under "all" tflint
+  # errors with `"<name>" module is not found. Did you run "terraform init"?` for every
+  # module block in the repo. Trunk's pull_request mode hides those as "existing issues"
+  # until a PR adds a new module block, at which point the error counts as new and fails
+  # the job. Restore "all" once the reusable lint workflow runs `terraform init -backend=false`
+  # before trunk check.
+  call_module_type = "local"
 
   # default values but keeping them here for clarity
   disabled_by_default = false
