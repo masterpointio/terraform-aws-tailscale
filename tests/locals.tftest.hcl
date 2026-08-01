@@ -113,7 +113,7 @@ run "test_routing_disabled_by_default" {
 
   # No source/dest check disable and no routing IAM policy with module defaults
   assert {
-    condition     = local.routing_iam_enabled == false
+    condition     = local.routing_iam_enabled == false && length(local.routing_statements) == 0
     error_message = "Expected routing IAM to be disabled by default"
   }
 
@@ -133,6 +133,16 @@ run "test_source_dest_check_disabled" {
   assert {
     condition     = local.source_dest_check_disabled == true && local.routing_iam_enabled == true
     error_message = "Expected source/dest check disable to enable routing IAM"
+  }
+
+  # Without routes the policy must grant nothing beyond the instance attribute call
+  assert {
+    condition = (
+      join(",", [for s in local.routing_statements : s.sid]) == "DisableSourceDestCheck" &&
+      join(",", one(local.routing_statements).actions) == "ec2:ModifyInstanceAttribute" &&
+      join(",", one(local.routing_statements).resources) == "arn:aws:ec2:*:*:instance/*"
+    )
+    error_message = "Expected the routing policy to carry only the source/dest check statement"
   }
 
   assert {
@@ -178,10 +188,21 @@ run "test_routes_via_explicit_route_table_ids" {
   # firing ExecStop and permanently deleting the VPC routes (oneshot units do not restart).
   assert {
     condition = (
-      strcontains(local.userdata, "Wants=network-online.target tailscaled.service") &&
-      !strcontains(local.userdata, "Requires=tailscaled.service")
+      length([for line in regexall("(?m)^Requires=.*$", local.userdata) : line if strcontains(line, "tailscaled.service")]) == 0 &&
+      length([for line in regexall("(?m)^Wants=.*$", local.userdata) : line if strcontains(line, "tailscaled.service")]) > 0 &&
+      length([for line in regexall("(?m)^Wants=.*$", local.userdata) : line if strcontains(line, "network-online.target")]) > 0
     )
     error_message = "Expected the routes unit to weakly depend on tailscaled via Wants=, not Requires="
+  }
+
+  # The route management grant must stay scoped to the resolved route tables
+  assert {
+    condition = (
+      join(",", [for s in local.routing_statements : s.sid]) == "DisableSourceDestCheck,ManageRoutes,DescribeRouteTables" &&
+      join(",", one([for s in local.routing_statements : s.actions if s.sid == "ManageRoutes"])) == "ec2:CreateRoute,ec2:ReplaceRoute,ec2:DeleteRoute" &&
+      join(",", one([for s in local.routing_statements : s.resources if s.sid == "ManageRoutes"])) == "arn:aws:ec2:*:*:route-table/rtb-explicit1"
+    )
+    error_message = "Expected route management to be granted only on the resolved route table"
   }
 
   # Forwarded sources default to the VPC CIDR (mocked) and open the primary SG
@@ -227,6 +248,14 @@ run "test_no_sg_rule_without_routes" {
     condition     = length(local.routing_security_group_rules) == 0
     error_message = "Expected no SG ingress rule when no routes are configured"
   }
+
+  assert {
+    condition = length(setintersection(
+      toset(flatten([for s in local.routing_statements : s.actions])),
+      toset(["ec2:CreateRoute", "ec2:ReplaceRoute", "ec2:DeleteRoute", "ec2:DescribeRouteTables"]),
+    )) == 0
+    error_message = "Expected no route management permissions when no routes are configured"
+  }
 }
 
 run "test_routes_resolved_from_subnet_ids" {
@@ -252,5 +281,10 @@ run "test_routes_resolved_from_subnet_ids" {
   assert {
     condition     = local.source_dest_check_disabled == true && strcontains(local.userdata, "--no-source-dest-check")
     error_message = "Expected routes to force source/dest check disabled"
+  }
+
+  assert {
+    condition     = join(",", one([for s in local.routing_statements : s.resources if s.sid == "ManageRoutes"])) == "arn:aws:ec2:*:*:route-table/rtb-frommock"
+    error_message = "Expected route management to be granted on the subnet-resolved route table"
   }
 }
