@@ -20,19 +20,19 @@ lint:
     # Incompatible with some Terraform features: https://github.com/tenable/terrascan/issues/1331
     - terrascan
   enabled:
-    - renovate@43.249.5
-    - tofu@1.12.3
+    - renovate@44.5.3
+    - tofu@1.12.5
     - terraform@1.1.0
     - actionlint@1.7.12
-    - checkov@3.3.6
+    - checkov@3.3.8
     - git-diff-check
-    - markdownlint@0.49.0
-    - prettier@3.9.4
-    - tflint@0.63.1
+    - markdownlint@0.49.1
+    - prettier@3.9.6
+    - tflint@0.64.0
     - trivy@0.72.0
-    - trufflehog@3.95.7
+    - trufflehog@3.96.0
     - yamllint@1.38.0
-    - zizmor@1.26.1
+    - zizmor@1.28.0
   definitions:
     - name: zizmor
       environment:
