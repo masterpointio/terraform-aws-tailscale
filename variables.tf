@@ -217,6 +217,8 @@ variable "source_dest_check" {
   Because the router runs in an Auto Scaling Group there is no per-instance attribute to set at
   launch, so when `false` each instance disables the check on itself at boot via
   `ec2:ModifyInstanceAttribute`.
+  Setting `route_destination_cidrs` disables the check regardless of this value, since the routes it
+  installs are unusable otherwise; set this to `false` only when the routes are managed elsewhere.
   EOT
 }
 
