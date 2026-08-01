@@ -147,7 +147,7 @@ tailscale set ${tailscale_set_extra_flags} \
 # per-instance launch attribute to set, so each instance disables the check on itself and (re)claims
 # its routes via a systemd unit. ExecStart re-claims after an ASG replacement swaps the ENI;
 # ExecStop deletes the routes on graceful shutdown so teardown/scale-in does not leave blackholes.
-%{ if source_dest_check_disabled == true || routes_enabled == true }
+%{ if source_dest_check_disabled == true }
 echo "Installing VPC -> tailnet routing integration..."
 
 install -d -m 0755 /etc/sysconfig /usr/local/sbin
