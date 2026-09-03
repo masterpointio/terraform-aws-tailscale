@@ -15,7 +15,7 @@ locals {
   tailscale_set_extra_flags_enabled = length(var.tailscale_set_extra_flags) > 0
 
   userdata = templatefile("${path.module}/userdata.sh.tmpl", {
-    authkey           = coalesce(
+    authkey = coalesce(
       one(tailscale_oauth_client.default[*].key),
       one(tailscale_tailnet_key.default[*].key),
     )
@@ -51,6 +51,7 @@ module "tailscale_subnet_router" {
   subnet_ids                = var.subnet_ids
   key_pair_name             = var.key_pair_name
   create_run_shell_document = var.create_run_shell_document
+  permissions_boundary      = var.permissions_boundary
 
   additional_security_group_ids   = var.additional_security_group_ids
   additional_security_group_rules = var.additional_security_group_rules
