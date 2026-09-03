@@ -52,8 +52,35 @@ module "tailscale" {
   vpc_id           = module.vpc.vpc_id
   subnet_ids       = module.subnets.private_subnet_ids
   advertise_routes = [module.vpc.vpc_cidr_block]
+
+  # Set exactly one of tailscale_tailnet_key or tailscale_oauth_client.
+  authkey_config = {
+    tailscale_tailnet_key = {
+      description   = "Subnet Router"
+      ephemeral     = false
+      expiry        = 7776000
+      preauthorized = true
+      reusable      = true
+    }
+
+    # ... OR ...
+    #
+    # tailscale_oauth_client = {
+    #   description = "Subnet Router"
+    #   scopes      = ["auth_keys", "devices:core", "devices:routes", "dns"]
+    # }
+  }
 }
 ```
+
+`authkey_config` selects the credential the subnet router presents when it joins your
+tailnet; exactly one of the two branches must be set. A tailnet key expires after `expiry`
+(90 days by default) and is only refreshed the next time you apply, so an instance launched
+after it lapses cannot register. An OAuth client secret does not expire — the node exchanges
+it for a fresh auth key on every boot — but the four scopes shown are the enforced minimum,
+the credentials configured on the `tailscale` provider must be permitted to create OAuth
+clients, your tailnet ACL must let the client own the module's tags, and the tailnet key
+settings (`ephemeral`, `expiry`, `preauthorized`, `reusable`) have no equivalent.
 
 ## Examples
 
