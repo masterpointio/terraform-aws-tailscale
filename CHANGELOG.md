@@ -18,6 +18,111 @@
 * Fix default variable ([#92](https://github.com/masterpointio/terraform-aws-tailscale/issues/92)) ([c84ae5e](https://github.com/masterpointio/terraform-aws-tailscale/commit/c84ae5e1f269c39d766b640bdcda8f6d7f6c90a3))
 * pin GitHub Actions to commit SHAs (INT-326) ([#98](https://github.com/masterpointio/terraform-aws-tailscale/issues/98)) ([70fc124](https://github.com/masterpointio/terraform-aws-tailscale/commit/70fc1245bc81a0c7bc68f31df30ebab62fc0d0b1))
 
+### Upgrading from 2.x
+
+`ephemeral`, `expiry`, `preauthorized` and `reusable` are replaced by a single
+`authkey_config` object, which selects **either** a tailnet key (2.x behavior) or a new
+OAuth client. Exactly one branch must be set. The `tailscale` provider floor moves to
+`>= 0.20.0`, so run `tofu init -upgrade`. `userdata.sh.tmpl` is unchanged — no changes
+are needed to any user data script.
+
+Note that the fields *inside* a branch are not `optional()`: selecting
+`tailscale_tailnet_key` means supplying all five of its fields, even ones you previously
+left at their defaults.
+
+#### Option 1 — keep using a tailnet key
+
+Before (2.1.0):
+
+```hcl
+module "tailscale" {
+  source  = "masterpointio/tailscale/aws"
+  version = "2.1.0"
+
+  vpc_id           = module.vpc.vpc_id
+  subnet_ids       = module.subnets.private_subnet_ids
+  advertise_routes = [module.vpc.vpc_cidr_block]
+
+  ephemeral = true
+}
+```
+
+After (3.0.0):
+
+```hcl
+module "tailscale" {
+  source  = "masterpointio/tailscale/aws"
+  version = "3.0.0"
+
+  vpc_id           = module.vpc.vpc_id
+  subnet_ids       = module.subnets.private_subnet_ids
+  advertise_routes = [module.vpc.vpc_cidr_block]
+
+  authkey_config = {
+    tailscale_tailnet_key = {
+      description   = ""      # "" matches a key created by 2.x; the module default
+      ephemeral     = true    #   is "Subnet Router", which forces key replacement
+      expiry        = 7776000 # ← implicit defaults in 2.x, now mandatory
+      preauthorized = true
+      reusable      = true
+    }
+  }
+}
+```
+
+#### Option 2 — switch to an OAuth client
+
+An OAuth client secret does not expire, so the node can register at any point in the
+future. This removes a failure mode in 2.x: a tailnet key expires after `expiry`
+(90 days by default) and is only refreshed by an apply, so an instance replaced after
+the key lapsed would boot, pass health checks, and silently never join the tailnet.
+
+The trade-off is that the secret in user data no longer expires and carries the API
+scopes below, and the `ephemeral` / `expiry` / `preauthorized` / `reusable` controls
+have no equivalent.
+
+```hcl
+module "tailscale" {
+  source  = "masterpointio/tailscale/aws"
+  version = "3.0.0"
+
+  vpc_id           = module.vpc.vpc_id
+  subnet_ids       = module.subnets.private_subnet_ids
+  advertise_routes = [module.vpc.vpc_cidr_block]
+
+  authkey_config = {
+    tailscale_oauth_client = {
+      description = "Subnet Router"
+      scopes      = ["auth_keys", "devices:core", "devices:routes", "dns"]
+    }
+  }
+}
+```
+
+Those four scopes are the enforced minimum. This option also requires that the
+credentials configured on the `tailscale` provider are permitted to create OAuth
+clients, and that your tailnet ACL lets the client own the module's tags.
+
+#### State
+
+`tailscale_tailnet_key.default` gained a `count`, so its address is now
+`tailscale_tailnet_key.default[0]`. Moving the state is **optional**:
+
+```sh
+tofu state mv 'module.tailscale.tailscale_tailnet_key.default' \
+              'module.tailscale.tailscale_tailnet_key.default[0]'
+```
+
+Skip it and the old key is destroyed and a new one created, which is a key rotation and
+is safe in most cases: the auth key is not a module output, and deleting it does not
+deregister an already-authenticated device, so the running subnet router stays connected.
+The new key produces a new launch template version that takes effect the next time the
+ASG replaces an instance. Move the state if you would rather avoid rotating the key, or
+if you use `ephemeral = true` and want to be certain node lifecycle is not affected.
+
+Switching to Option 2 needs no state move — the key's `count` becomes 0, so it is
+destroyed and the OAuth client is created in its place.
+
 ## [2.1.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/v2.0.0...v2.1.0) (2026-02-20)
 
 
