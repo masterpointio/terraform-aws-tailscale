@@ -82,6 +82,12 @@ variable "allow_encrypted_uploads_only" {
   default     = false
 }
 
+variable "permissions_boundary" {
+  description = "The ARN of the permissions boundary to apply to the Tailscale Subnet Router IAM role."
+  type        = string
+  default     = null
+}
+
 variable "key_pair_name" {
   default     = null
   type        = string

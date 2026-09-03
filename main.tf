@@ -51,6 +51,7 @@ module "tailscale_subnet_router" {
   subnet_ids                = var.subnet_ids
   key_pair_name             = var.key_pair_name
   create_run_shell_document = var.create_run_shell_document
+  permissions_boundary      = var.permissions_boundary
 
   additional_security_group_ids   = var.additional_security_group_ids
   additional_security_group_rules = var.additional_security_group_rules
