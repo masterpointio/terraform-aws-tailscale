@@ -237,7 +237,7 @@ variable "authkey_config" {
   type = object({
     tailscale_oauth_client = optional(object({
       description = string
-      scopes = list(string)
+      scopes      = list(string)
     }))
     tailscale_tailnet_key = optional(object({
       description   = string
@@ -250,7 +250,7 @@ variable "authkey_config" {
 
   validation {
     condition = (
-      var.authkey_config.tailscale_oauth_client == null && var.authkey_config.tailscale_tailnet_key != null || 
+      var.authkey_config.tailscale_oauth_client == null && var.authkey_config.tailscale_tailnet_key != null ||
       var.authkey_config.tailscale_oauth_client != null && var.authkey_config.tailscale_tailnet_key == null
     )
     error_message = "Exactly one of 'tailscale_oauth_client' or 'tailscale_tailnet_key' must be defined in authkey_config."
