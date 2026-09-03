@@ -53,6 +53,7 @@ module "tailscale" {
   subnet_ids       = module.subnets.private_subnet_ids
   advertise_routes = [module.vpc.vpc_cidr_block]
 
+  # Set exactly one of tailscale_tailnet_key or tailscale_oauth_client.
   authkey_config = {
     tailscale_tailnet_key = {
       description   = "Subnet Router"
@@ -61,34 +62,25 @@ module "tailscale" {
       preauthorized = true
       reusable      = true
     }
+
+    # ... OR ...
+    #
+    # tailscale_oauth_client = {
+    #   description = "Subnet Router"
+    #   scopes      = ["auth_keys", "devices:core", "devices:routes", "dns"]
+    # }
   }
 }
 ```
 
-### Authenticating the Subnet Router
-
 `authkey_config` selects the credential the subnet router presents when it joins your
-tailnet. Set exactly one of `tailscale_tailnet_key` or `tailscale_oauth_client` — the
-module default creates a tailnet key with the values shown above.
-
-A tailnet key expires after `expiry` (90 days by default) and is only refreshed the next
-time you apply, so an instance launched after the key lapses will not be able to register.
-If your subnet routers are long-lived, use an OAuth client instead: the client secret does
-not expire, and the node exchanges it for a fresh auth key on every boot.
-
-```hcl
-  authkey_config = {
-    tailscale_oauth_client = {
-      description = "Subnet Router"
-      scopes      = ["auth_keys", "devices:core", "devices:routes", "dns"]
-    }
-  }
-```
-
-Those four scopes are the enforced minimum. This option also requires that the credentials
-configured on the `tailscale` provider are permitted to create OAuth clients, and that your
-tailnet ACL lets the client own the module's tags. Note that `ephemeral`, `expiry`,
-`preauthorized` and `reusable` have no equivalent when using an OAuth client.
+tailnet; exactly one of the two branches must be set. A tailnet key expires after `expiry`
+(90 days by default) and is only refreshed the next time you apply, so an instance launched
+after it lapses cannot register. An OAuth client secret does not expire — the node exchanges
+it for a fresh auth key on every boot — but the four scopes shown are the enforced minimum,
+the credentials configured on the `tailscale` provider must be permitted to create OAuth
+clients, your tailnet ACL must let the client own the module's tags, and the tailnet key
+settings (`ephemeral`, `expiry`, `preauthorized`, `reusable`) have no equivalent.
 
 ## Examples
 
