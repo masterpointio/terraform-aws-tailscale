@@ -70,6 +70,11 @@ module "tailscale" {
 }
 ```
 
+The `count` added to `tailscale_tailnet_key.default` moves its address to
+`tailscale_tailnet_key.default[0]`. Run `tofu state mv` if you want to keep the
+existing key; otherwise it is replaced, which rotates the key without disconnecting
+the running subnet router.
+
 #### Option 2 — switch to an OAuth client
 
 An OAuth client secret does not expire, so the node can register at any point in the
@@ -102,26 +107,6 @@ module "tailscale" {
 Those four scopes are the enforced minimum. This option also requires that the
 credentials configured on the `tailscale` provider are permitted to create OAuth
 clients, and that your tailnet ACL lets the client own the module's tags.
-
-#### State
-
-`tailscale_tailnet_key.default` gained a `count`, so its address is now
-`tailscale_tailnet_key.default[0]`. Moving the state is **optional**:
-
-```sh
-tofu state mv 'module.tailscale.tailscale_tailnet_key.default' \
-              'module.tailscale.tailscale_tailnet_key.default[0]'
-```
-
-Skip it and the old key is destroyed and a new one created, which is a key rotation and
-is safe in most cases: the auth key is not a module output, and deleting it does not
-deregister an already-authenticated device, so the running subnet router stays connected.
-The new key produces a new launch template version that takes effect the next time the
-ASG replaces an instance. Move the state if you would rather avoid rotating the key, or
-if you use `ephemeral = true` and want to be certain node lifecycle is not affected.
-
-Switching to Option 2 needs no state move — the key's `count` becomes 0, so it is
-destroyed and the OAuth client is created in its place.
 
 ## [2.1.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/v2.0.0...v2.1.0) (2026-02-20)
 
