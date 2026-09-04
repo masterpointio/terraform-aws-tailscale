@@ -32,6 +32,21 @@ mock_provider "aws" {
       id = "lt-mock123456789"
     }
   }
+  # Needed so `module.ssm_state[0].arn_map[...]` resolves to a known value
+  # during `apply` in the SSM-state tests below.
+  mock_resource "aws_ssm_parameter" {
+    defaults = {
+      arn = "arn:aws:ssm:us-east-1:000000000000:parameter/mock"
+    }
+  }
+  # `cloudposse/iam-policy/aws` produces an `aws_iam_policy` whose `arn` is
+  # consumed by `aws_iam_role_policy_attachment.default`. The attachment
+  # validates ARN format, so the random default mock value isn't acceptable.
+  mock_resource "aws_iam_policy" {
+    defaults = {
+      arn = "arn:aws:iam::000000000000:policy/mock"
+    }
+  }
 }
 
 run "test_primary_tag_provided" {
@@ -90,5 +105,124 @@ run "test_tailscaled_extra_flags" {
   assert {
     condition     = strcontains(local.userdata, "--state=mem:") && strcontains(local.userdata, "--verbose=1")
     error_message = "Expected userdata to contain tailscaled extra flags"
+  }
+}
+
+# When `ssm_state_enabled = false` (the default), the module must NOT inject
+# `--state` or `--statedir`; only caller-provided flags should appear.
+run "test_tailscaled_extra_flags_no_ssm_state" {
+  command = apply
+
+  variables {
+    tailscaled_extra_flags = ["--verbose=1"]
+  }
+
+  assert {
+    condition     = local.ssm_state_flag == "" && local.ssm_statedir_flag == ""
+    error_message = "Expected no SSM state flags when ssm_state_enabled is false"
+  }
+
+  assert {
+    condition     = local.tailscaled_extra_flags == "--verbose=1"
+    error_message = "Expected only caller-provided flags when ssm_state_enabled is false, got: ${local.tailscaled_extra_flags}"
+  }
+}
+
+# When `ssm_state_enabled = true`, the module must inject both `--state=<arn>`
+# and `--statedir=/var/lib/tailscale` (the latter is required so SSH host keys,
+# taildrop, TKA, and the per-profile cache keep working -- see the comment on
+# `local.ssm_statedir_flag` in main.tf).
+run "test_tailscaled_extra_flags_ssm_state_injects_statedir" {
+  command = apply
+
+  variables {
+    ssm_state_enabled = true
+  }
+
+  assert {
+    condition     = strcontains(local.tailscaled_extra_flags, "--state=arn:aws:ssm:")
+    error_message = "Expected module to inject --state=<ssm arn>, got: ${local.tailscaled_extra_flags}"
+  }
+
+  assert {
+    condition     = strcontains(local.tailscaled_extra_flags, "--statedir=/var/lib/tailscale")
+    error_message = "Expected module to inject --statedir=/var/lib/tailscale, got: ${local.tailscaled_extra_flags}"
+  }
+
+  assert {
+    condition     = strcontains(local.userdata, "--statedir=/var/lib/tailscale")
+    error_message = "Expected rendered userdata to contain --statedir=/var/lib/tailscale"
+  }
+}
+
+# Ordering contract: module-injected flags come FIRST, caller flags come LAST.
+# tailscaled uses Go's standard `flag` package (last-wins for repeated flags),
+# so this ordering means caller-supplied flags take precedence over module
+# defaults -- except for `--state`/`--statedir`, which the precondition below
+# forbids when `ssm_state_enabled = true`.
+run "test_tailscaled_extra_flags_caller_wins_ordering" {
+  command = apply
+
+  variables {
+    ssm_state_enabled      = true
+    tailscaled_extra_flags = ["--verbose=2"]
+  }
+
+  # `--statedir=...` must appear before `--verbose=2` in the joined string,
+  # i.e. module flag is emitted first and caller flag is emitted last.
+  assert {
+    condition = (
+      length(regexall("--statedir=/var/lib/tailscale.*--verbose=2", local.tailscaled_extra_flags)) == 1
+    )
+    error_message = "Expected module flags to precede caller flags (caller-wins under tailscaled last-wins parsing), got: ${local.tailscaled_extra_flags}"
+  }
+}
+
+# Precondition guard: when `ssm_state_enabled = true`, the caller MUST NOT
+# supply `--state` via `tailscaled_extra_flags`. Because caller flags now win
+# under last-wins parsing, allowing this would silently break the SSM-state
+# contract (the module-provisioned SSM parameter would be ignored).
+run "test_tailscaled_extra_flags_precondition_rejects_state" {
+  command = plan
+
+  variables {
+    ssm_state_enabled      = true
+    tailscaled_extra_flags = ["--state=mem:"]
+  }
+
+  expect_failures = [
+    aws_iam_role_policy_attachment.default,
+  ]
+}
+
+# Same guard for `--statedir`: required to be `/var/lib/tailscale` whenever
+# `--state` points at the portable SSM store.
+run "test_tailscaled_extra_flags_precondition_rejects_statedir" {
+  command = plan
+
+  variables {
+    ssm_state_enabled      = true
+    tailscaled_extra_flags = ["--statedir=/tmp/custom"]
+  }
+
+  expect_failures = [
+    aws_iam_role_policy_attachment.default,
+  ]
+}
+
+# Sanity: when `ssm_state_enabled = false`, the precondition does not apply
+# (the guarded resource has count = 0), so a caller IS allowed to pass
+# `--state` / `--statedir` freely.
+run "test_tailscaled_extra_flags_state_allowed_without_ssm" {
+  command = apply
+
+  variables {
+    ssm_state_enabled      = false
+    tailscaled_extra_flags = ["--state=mem:", "--statedir=/tmp/custom"]
+  }
+
+  assert {
+    condition     = local.tailscaled_extra_flags == "--state=mem: --statedir=/tmp/custom"
+    error_message = "Expected caller --state/--statedir to pass through when ssm_state_enabled is false, got: ${local.tailscaled_extra_flags}"
   }
 }
