@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.1](https://github.com/masterpointio/terraform-aws-tailscale/compare/v3.0.0...v3.0.1) (2026-10-31)
+
+
+### Bug Fixes
+
+* require Terraform &gt;= 1.5 ([#110](https://github.com/masterpointio/terraform-aws-tailscale/issues/110)) ([d832f3c](https://github.com/masterpointio/terraform-aws-tailscale/commit/d832f3c46d7ebdb3425af3559276adf3037072a8))
+
 ## [3.0.0](https://github.com/masterpointio/terraform-aws-tailscale/compare/v2.1.0...v3.0.0) (2026-09-03)
 
 
